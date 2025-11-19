@@ -47,3 +47,4 @@ void uart2_init(void) {
 
 	uart_init(uart2, 9600, uart2_pins, uart2_port);
 }
+	

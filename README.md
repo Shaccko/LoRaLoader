@@ -1,2 +1,2 @@
 # LoRaLoader
-A custom over-the-air bootloader using LoRa for byte transmission
+A custom over-the-air bootloader using LoRa for byte transmission.
