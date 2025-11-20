@@ -107,4 +107,13 @@ static inline void gpio_set_af(uint32_t pin, uint8_t af_num, uint8_t port) {
 	}
 }
 
+
+static inline void disable_irq(void) {
+	__asm volatile ("cpsid i" : : : "memory");
+}
+
+static inline void enable_irq(void) {
+	__asm volatile ("cpsid i" : : : "memory");
+}
+
 #endif
