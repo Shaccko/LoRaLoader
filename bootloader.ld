@@ -1,4 +1,4 @@
-ENTRY(_reset)
+ENTRY(_bootloader)
 MEMORY {
 	bootloader (rx) : ORIGIN = 0x08000000, LENGTH = 16K
 	app	   (rx) : ORIGIN = 0x08004000, LENGTH = 512K - 16K
