@@ -6,7 +6,7 @@ int main() {
 	systick_init();
 
 	for(;;) {
-		printf("We are in app\r\n");
+		printf("We are in app!\r\n");
 		delay(1000);
 	}
 }

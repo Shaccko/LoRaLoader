@@ -1,8 +1,8 @@
-ENTRY(_bootloader)
+ENTRY(_bootloader);
 MEMORY {
-	bootloader (rx) : ORIGIN = 0x08000000, LENGTH = 16K
-	app	   (rx) : ORIGIN = 0x08004000, LENGTH = 512K - 16K
-	sram	  (rxw) : ORIGIN = 0x20000000, LENGTH = 128K
+	bootloader (rx) : ORIGIN = 0x08000000, LENGTH = 16k
+	app	   (rx) : ORIGIN = 0x08004000, LENGTH = 512k - 16k
+	sram	  (rxw) : ORIGIN = 0x20000000, LENGTH = 128k
 }
 
 _startapp = ORIGIN(app);
@@ -35,7 +35,7 @@ SECTIONS {
 		*(SORT(.bss*))
 		(COMMON)
 		_edata 	= .;
-	} > sram > bootloader
+	} > sram
 }
 
 
