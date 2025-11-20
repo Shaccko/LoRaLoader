@@ -1,21 +1,29 @@
-CFLAGS  ?=  -W -Wall -Wextra -Wundef -Wshadow -Wdouble-promotion \
-            -Wformat-truncation -fno-common -Wconversion \
-            -g3 -Os -ffunction-sections -fdata-sections -I. \
-            -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 $(EXTRA_CFLAGS)
-LDFLAGS ?= -Tlink.ld -nostartfiles -nostdlib --specs nano.specs -lc -lgcc -Wl,--gc-sections -Wl,-Map=$@.map
-SOURCES = main.c rcc.c startup.c uart.c spi.c LoRa.c
-HEADER = rcc.h hal.h spi.h uart.h LoRa.h
+BOOT_SRC := bootloader.c
+BOOT_LD := bootloader.ld
+BOOT_ELF := bootloader.elf
 
-build: firmware.elf
+APP_SRC := startup_f411re.c main.c
+APP_LD := f411re.ld
+APP_ELF := app.elf
 
-flash: firmware.bin
-	st-flash --reset write $< 0x8000000
+CC := arm-none-eabi-gcc
+OBJCOPY := arm-none-eabi-objcopy
+CFLAGS := -mcpu=cortex-m4 -mthumb -O2 -ffreestanding -Wall -Wextra -I.
+LDFLAGS := -nostdlib -T
 
-firmware.bin: firmware.elf
-	arm-none-eabi-objcopy -O binary $< $@
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-firmware.elf: $(SOURCES) $(HEADER)
-	arm-none-eabi-gcc $(SOURCES) $(CFLAGS) $(LDFLAGS) -o $@
+bootloader: $(BOOT_ELF)
+
+$(BOOT_ELF): $(BOOT_SRC:.c=.o)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(BOOT_LD) $^ -o $@
+
+app: $(APP_ELF)
+	
+$(APP_ELF): $(APP_SRC:.c=.o)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(APP_LD) $^ -o $@
+
 
 clean:
-	cmd /C del /Q /F firmware.* *~ *.o
+	rm -f *.o *.elf
