@@ -7,6 +7,8 @@
 
 #include <rcc.h>
 
+#define CPACR ((volatile uint32_t*) 0xE000ED88) /* Address to enable FPU */
+
 #define _IO volatile
 #define BIT(x) (1UL << (x))
 #define GPIO(bank) ((struct gpio*) (0x40020000 + 0x400 * (bank)))
@@ -14,7 +16,6 @@
 #define PIN_NUM(pin) (1U << (pin))
 #define PINBANK(pin) (pin >> 8)
 #define BANK(port) ((port) - 'A')
-#define MASK 0x3U
 
 #define GPIO_PIN_SET 1
 #define GPIO_PIN_RESET 0

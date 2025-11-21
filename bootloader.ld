@@ -22,19 +22,19 @@ SECTIONS {
 	} > bootloader
 
 	.data	 : {
-		_sdata	= .;
+		_sdata = .;
 		*(.data)
 		*(SORT(.data.*))
-		_edata	= .;
+		_edata = .;
 	} > sram AT > bootloader
 	_sidata = LOADADDR(.data);
 
 	.bss	 : {
-		_sbss 	= .;
+		_sbss = .;
 		*(.bss)
 		*(SORT(.bss.*))
 		(COMMON)
-		_edata 	= .;
+		_ebss = .;
 	} > sram
 }
 

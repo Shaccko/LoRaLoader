@@ -1,6 +1,7 @@
 ENTRY(_reset);
 MEMORY {
-	flash(rx) : ORIGIN = 0x08004000, LENGTH = 512k
+	bootloader(rx) : ORIGIN = 0x08000000, LENGTH = 16k
+	flash(rx) : ORIGIN = 0x08004000, LENGTH = 512k - 16k
 	sram(rxw) : ORIGIN = 0x20000000, LENGTH = 128k
 }
 
@@ -30,6 +31,6 @@ SECTIONS {
 		*(.bss)
 		*(SORT(.bss.*))
 		*(COMMON)
-		_bss = .;
+		_ebss = .;
 	} > sram 
 }
