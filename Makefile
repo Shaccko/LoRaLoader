@@ -18,11 +18,22 @@ CFLAGS ?= -W -Wall -Wextra -Werror -Wundef -Wshadow -Wdouble-promotion \
 LDFLAGS ?= -nostartfiles -nostdlib --specs nano.specs -lc -lgcc \
 	   -Wl,--gc-sections -Wl,-Map=$@.map 
 
+build: app.elf bootloader.elf
 
-$(APP_ELF): $(APP_OBJS)
+flash: bootloader.bin app.bin
+	st-flash --reset write app.bin 0x08004000
+	st-flash --reset write bootloader.bin 0x08000000
+
+app.bin: app.elf
+	$(OBJCOPY) -O binary $< $@
+
+app.elf: $(APP_OBJS)
 	$(CC) $(APP_OBJS) $(LDFLAGS) -T $(APP_LD) -o $@
 
-$(BOOT_ELF): $(BOOT_OBJS)
+bootloader.bin: bootloader.elf
+	$(OBJCOPY) -O binary $< $@
+
+bootloader.elf: $(BOOT_OBJS)
 	$(CC) $(BOOT_OBJS) $(LDFLAGS) -T $(BOOT_LD) -o $@
 
 %.o: %.c
@@ -30,5 +41,5 @@ $(BOOT_ELF): $(BOOT_OBJS)
 
 
 clean:
-	cmd /C del /Q /F *.elf *.o *.map
+	cmd /C del /Q /F *.elf *.o *.map *.bin
 	

@@ -33,7 +33,7 @@ SECTIONS {
 		_sbss = .;
 		*(.bss)
 		*(SORT(.bss.*))
-		(COMMON)
+		*(COMMON)
 		_ebss = .;
 	} > sram
 }

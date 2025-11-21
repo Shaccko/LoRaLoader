@@ -13,6 +13,7 @@ int main() {
 	*fpu |= 0xF << 20; /* Set FPU bits */
 
 	for(;;) {
+		printf("I work\r\n");
 		delay(1000);
 	}
 }
