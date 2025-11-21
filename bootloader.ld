@@ -24,18 +24,17 @@ SECTIONS {
 	.data	 : {
 		_sdata	= .;
 		*(.data)
-		*(SORT(.data*))
+		*(SORT(.data.*))
 		_edata	= .;
-	} > sram > bootloader
-	_sidata = LOADADDR(.data)
+	} > sram AT > bootloader
+	_sidata = LOADADDR(.data);
 
 	.bss	 : {
 		_sbss 	= .;
 		*(.bss)
-		*(SORT(.bss*))
+		*(SORT(.bss.*))
 		(COMMON)
 		_edata 	= .;
 	} > sram
 }
-
 

@@ -1,5 +1,9 @@
 #include <stdint.h>
+#include <stdio.h>
+
+#include <uart.h>
 #include <rcc.h>
+
 
 int main() {
 	uart2_init();

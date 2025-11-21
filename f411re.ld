@@ -7,7 +7,7 @@ MEMORY {
 _estack = ORIGIN(sram) + LENGTH(sram);
 
 SECTIONS {
-	.vectors : { (KEEP(.vectors*)) } > flash
+	.vectors : { KEEP(*(.vectors*)) } > flash
 	.text : {
 		*(.text)
 		*(.text*)
@@ -20,7 +20,7 @@ SECTIONS {
 	.data : {
 		_sdata = .;
 		*(.data)
-		*(SORT (.data*))
+		*(SORT (.data.*))
 		_edata = .;
 	} > sram AT > flash
 	_sidata = LOADADDR(.data);
@@ -28,9 +28,8 @@ SECTIONS {
 	.bss : {
 		_sbss = .;
 		*(.bss)
-		*(sort (.bss*))
-		(COMMON)
+		*(SORT(.bss.*))
+		*(COMMON)
 		_bss = .;
 	} > sram 
 }
-
