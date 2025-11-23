@@ -1,45 +1,41 @@
-BOOT_SRC := bootloader.c rcc.c 
-BOOT_OBJS := $(BOOT_SRC:.c=.o)
-BOOT_ELF := bootloader.elf
-BOOT_LD := bootloader.ld
+CFLAGS  ?=  -W -Wall -Wextra -Wundef -Wshadow -Wdouble-promotion \
+            -Wformat-truncation -fno-common -Wconversion \
+            -g3 -Os -ffunction-sections -fdata-sections -I. \
+            -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 $(EXTRA_CFLAGS)
+LDFLAGS ?= -nostartfiles -nostdlib --specs nano.specs -lc -lgcc -Wl,--gc-sections -Wl,-Map=$@.map
 
-APP_SRC := startup_f411re.c main.c rcc.c uart.c syscalls.c
-APP_OBJS := $(APP_SRC:.c=.o)
-APP_ELF := app.elf
-APP_LD := f411re.ld
+BOOTLOADER_LD ?= bootloader.ld
+BOOTLOADER_SOURCES = bootloader.c startup_bootloader.c rcc.c syscalls.c uart.c 
+BOOTLOADER_HEADER = rcc.h hal.h uart.h
 
-CC := arm-none-eabi-gcc
-OBJCOPY := arm-none-eabi-objcopy
-CFLAGS ?= -W -Wall -Wextra -Werror -Wundef -Wshadow -Wdouble-promotion \
-	  -Wformat-truncation -fno-common -Wconversion \
-	  -g3 -Os -ffunction-sections -fdata-sections -I. \
-	  -mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 
+FIRMWARE_LD ?= f411re.ld
+FIRMWARE_SOURCES = main.c rcc.c startup_f411re.c uart.c syscalls.c
+FIRMWARE_HEADER = rcc.h hal.h uart.h 
 
-LDFLAGS ?= -nostartfiles -nostdlib --specs nano.specs -lc -lgcc \
-	   -Wl,--gc-sections -Wl,-Map=$@.map 
+build: firmware.elf bootloader.elf app.elf firmware.bin bootloader.bin app.bin
 
-build: app.elf bootloader.elf
-
-flash: bootloader.bin app.bin
-	st-flash --reset write app.bin 0x08004000
+flash: bootloader.bin firmware.bin
 	st-flash --reset write bootloader.bin 0x08000000
+	st-flash --reset write firmware.bin 0x08004000
 
-app.bin: app.elf
-	$(OBJCOPY) -O binary $< $@
+app.elf: bootloader.elf firmware.elf
+	type bootloader.elf firmware.elf > $@
 
-app.elf: $(APP_OBJS)
-	$(CC) $(APP_OBJS) $(LDFLAGS) -T $(APP_LD) -o $@
+app.bin: bootloader.bin firmware.bin
+	type bootloader.bin firmware.bin > $@ 
+
+firmware.bin: firmware.elf
+	arm-none-eabi-objcopy -O binary $< $@
 
 bootloader.bin: bootloader.elf
-	$(OBJCOPY) -O binary $< $@
+	arm-none-eabi-objcopy -O binary $< $@
 
-bootloader.elf: $(BOOT_OBJS)
-	$(CC) $(BOOT_OBJS) $(LDFLAGS) -T $(BOOT_LD) -o $@
+firmware.elf: $(FIRMWARE_SOURCES) $(FIRMWARE_HEADER)
+	arm-none-eabi-gcc $(FIRMWARE_SOURCES) $(CFLAGS) -T $(FIRMWARE_LD) $(LDFLAGS) -o $@
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+bootloader.elf: $(BOOTLOADER_SOURCES) $(BOOTLOADER_HEADER)
+	arm-none-eabi-gcc $(BOOTLOADER_SOURCES) $(CFLAGS) -T $(BOOTLOADER_LD) $(LDFLAGS) -o $@
 
 
 clean:
-	cmd /C del /Q /F *.elf *.o *.map *.bin
-	
+	cmd /C del /Q /F *~ *.o *.elf *.map *.bin

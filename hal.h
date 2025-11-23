@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include <rcc.h>
 
@@ -19,6 +20,14 @@
 
 #define GPIO_PIN_SET 1
 #define GPIO_PIN_RESET 0
+#define GPIO_MODE_AF_OD (GPIO_MODE_AF | 0x40)
+
+#define SCB ((struct scb*) (0xE000ED00))
+
+struct scb {
+	volatile uint32_t CPUID, ICSR, VTOR, AIRCR, SCR, CCR, SHPR1, SHPR2,
+		 SHCSR;
+};
 
 struct gpio {
 	volatile uint32_t MODER, OTYPER, OSPEEDR, PUPDR, IDR, ODR, BSRR, LCKR,
@@ -34,11 +43,16 @@ static inline void gpio_set_mode(uint32_t pin, uint8_t MODE, uint8_t port) {
 	uint32_t pin_pos = 0x00;
 	uint32_t bit_pos;
 
+
 	while ((pin >> pin_pos) != 0x00) {
 		bit_pos = 0x01 << pin_pos;
 		uint32_t curr_pin = pin & bit_pos;
 
 		if (curr_pin) {
+			if (MODE & 0x40) {
+				gpio->OTYPER |= (1U << pin_pos);
+			}
+
 			gpio->MODER &= ~(3U << (pin_pos * 2));
 			gpio->MODER |= (MODE & 3U) << (pin_pos * 2);
 		}
@@ -63,7 +77,7 @@ static inline void gpio_set_speed(uint32_t pin, uint8_t speed, uint8_t port) {
 	}
 }
 
-static inline void gpio_write_pin(uint8_t port, uint32_t pin, uint8_t val) {
+static inline void gpio_write_pin(uint32_t pin, uint8_t val, uint8_t port) {
 	struct gpio *gpio = GPIO(BANK(port));
 	uint32_t pin_pos = 0x00;
 	uint32_t bit_pos;
@@ -107,14 +121,13 @@ static inline void gpio_set_af(uint32_t pin, uint8_t af_num, uint8_t port) {
 		pin_pos++;
 	}
 }
-
-
 static inline void disable_irq(void) {
 	__asm volatile ("cpsid i" : : : "memory");
 }
 
 static inline void enable_irq(void) {
-	__asm volatile ("cpsid i" : : : "memory");
+	__asm volatile ("cpsie i" : : : "memory");
 }
+
 
 #endif

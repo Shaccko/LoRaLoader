@@ -47,4 +47,10 @@ void uart2_init(void) {
 
 	uart_init(uart2, 9600, uart2_pins, uart2_port);
 }
-	
+
+void print_stop(void) {
+	static char* msg = "stop\r\n";
+	static size_t msg_len = 6;
+
+	uart_write_buf(uart2, msg, msg_len);
+}
