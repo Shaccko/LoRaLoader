@@ -13,11 +13,11 @@ static inline void blink_led(void) {
 	gpio_set_mode(led_pin, GPIO_MODE_OUTPUT, led_port);
 
 	size_t i;
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < 10; i++) {
 		gpio_write_pin(led_pin, GPIO_PIN_SET, led_port);
-		delay(500);
+		delay(50);
 		gpio_write_pin(led_pin, GPIO_PIN_RESET, led_port);
-		delay(500);
+		delay(50);
 	}
 }
 
@@ -25,13 +25,14 @@ static inline void blink_led(void) {
 void boot(void) {
 	extern uint32_t __app_start;
 
+	systick_init();
 	uart2_init();
 
 	/* Bootloader stuff */
 	printf("Inside bootloader!\r\n");
 	uint32_t app_flash = (uint32_t)(&__app_start);
 	if (((*(uint32_t*) app_flash) & 0x2FFE0000) == 0x20020000) {
-		printf("Flash detected, preparing to jump...\r\n");
+		blink_led();
 
 		/* Disable IRQ and systick for critical statements */
 		SYSTICK->CTRL = 0;
