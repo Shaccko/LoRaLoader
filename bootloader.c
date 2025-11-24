@@ -28,9 +28,10 @@ void boot(void) {
 	uart2_init();
 
 	/* Bootloader stuff */
+	printf("Inside bootloader!\r\n");
 	uint32_t app_flash = (uint32_t)(&__app_start);
 	if (((*(uint32_t*) app_flash) & 0x2FFE0000) == 0x20020000) {
-		printf("App exists, preparing to jump...\r\n");
+		printf("Flash detected, preparing to jump...\r\n");
 
 		/* Disable IRQ and systick for critical statements */
 		SYSTICK->CTRL = 0;

@@ -13,17 +13,11 @@ FIRMWARE_SOURCES = main.c rcc.c startup_f411re.c uart.c syscalls.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h 
 
 
-build: firmware.elf bootloader.elf app.elf firmware.bin bootloader.bin app.bin
+build: firmware.elf bootloader.elf firmware.bin bootloader.bin 
 
 flash: bootloader.bin firmware.bin
 	st-flash --reset write firmware.bin 0x08004000
 	st-flash write bootloader.bin 0x08000000
-
-app.elf: bootloader.elf firmware.elf
-	cat bootloader.elf firmware.elf > $@
-
-app.bin: bootloader.bin firmware.bin
-	cat bootloader.bin firmware.bin > $@ 
 
 firmware.bin: firmware.elf
 	arm-none-eabi-objcopy -O binary $< $@

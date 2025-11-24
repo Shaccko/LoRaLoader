@@ -7,11 +7,12 @@
 
 
 int main() {
-	systick_init();
 	uart2_init();
+	systick_init();
 
 	for(;;) {
-		printf("l;askd;lsakd;als\r\n");
+		printf("yep\r\n");
 		delay(500);
 	}
+
 }
