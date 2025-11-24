@@ -1,11 +1,12 @@
 ENTRY(__bootloader_reset);
 MEMORY {
 	bootloader (rx) : ORIGIN = 0x08000000, LENGTH = 16k
-	app	   (rx) : ORIGIN = 0x08004000, LENGTH = 512k - 16k
+	approm     (rx) : ORIGIN = 0x08004000, LENGTH = 512k - 16k
 	sram	  (rxw) : ORIGIN = 0x20000000, LENGTH = 128k
 }
 
 _estack = ORIGIN(sram) + LENGTH(sram);
+__app_start = ORIGIN(approm);
 
 SECTIONS {
 	.vectors : { KEEP(*(.vectors*)) } > bootloader

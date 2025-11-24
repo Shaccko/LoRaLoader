@@ -5,7 +5,6 @@
 #include <hal.h>
 #include <rcc.h>
 
-#define VTOR (*(volatile uint32_t*) 0xE000ED08)
 
 static inline void blink_led(void) {
 	uint32_t led_pin = PIN_NUM(5);
@@ -24,28 +23,29 @@ static inline void blink_led(void) {
 
 
 void boot(void) {
-	systick_init();
+	extern uint32_t __app_start;
+
 	uart2_init();
 
 	/* Bootloader stuff */
-	printf("Working boot\r\n");
-	delay(500);
-	printf("Still working\r\n");
+	uint32_t app_flash = (uint32_t)(&__app_start);
+	if (((*(uint32_t*) app_flash) & 0x2FFE0000) == 0x20020000) {
+		printf("App exists, preparing to jump...\r\n");
 
+		/* Disable IRQ and systick for critical statements */
+		SYSTICK->CTRL = 0;
+		SYSTICK->LOAD = 0;
+		SYSTICK->VAL = 0;
 
-	SYSTICK->CTRL = 0;
-	SYSTICK->LOAD = 0;
-	SYSTICK->VAL = 0;
-	
-	/* Disable IRQ and systick for critical statements */
-	/* Compiler screws these registers up without volatile */
-	volatile uint32_t vt_msp = (*(volatile uint32_t*)(0x08004000 + 0));
-	volatile uint32_t reset =  (*(volatile uint32_t*)(0x08004000 + 4));
-	VTOR = vt_msp;
-	void (*app)(void) = (void(*)(void)) reset;
+		uint32_t vt_msp = (*(uint32_t*)app_flash);
+		uint32_t reset = (*(uint32_t*)(app_flash + 4));
+		void (*app)(void) = ((void(*)(void)) reset);
 
-	__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
-	app();
+		__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
+		app();
+	}
+	else {
+	}
 
 	for(;;);
 }

@@ -40,21 +40,21 @@ enum { LOW_SPEED, MED_SPEED, FAST_SPEED, HIGH_SPEED };
 static inline void gpio_set_mode(uint32_t pin, uint8_t MODE, uint8_t port) {
 	struct gpio *gpio = GPIO(BANK(port));
 	RCC->AHB1ENR |= BIT(BANK(port));
-	uint32_t pin_pos = 0x00;
+	uint32_t pin_pos = 0x00U;
 	uint32_t bit_pos;
 
 
-	while ((pin >> pin_pos) != 0x00) {
-		bit_pos = 0x01 << pin_pos;
+	while ((pin >> pin_pos) != 0x00U) {
+		bit_pos = 0x01U << pin_pos;
 		uint32_t curr_pin = pin & bit_pos;
 
 		if (curr_pin) {
-			if (MODE & 0x40) {
+			if (MODE & 0x40U) {
 				gpio->OTYPER |= (1U << pin_pos);
 			}
 
-			gpio->MODER &= ~(3U << (pin_pos * 2));
-			gpio->MODER |= (MODE & 3U) << (pin_pos * 2);
+			gpio->MODER &= ~(3U << (pin_pos * 2U));
+			gpio->MODER |= (MODE & 3U) << (pin_pos * 2U);
 		}
 		pin_pos++;
 	}	
@@ -62,11 +62,11 @@ static inline void gpio_set_mode(uint32_t pin, uint8_t MODE, uint8_t port) {
 
 static inline void gpio_set_speed(uint32_t pin, uint8_t speed, uint8_t port) {
 	struct gpio *gpio = GPIO(BANK(port));
-	uint32_t pin_pos = 0x00;
+	uint32_t pin_pos = 0x00U;
 	uint32_t bit_pos;
 
-	while ((pin >> pin_pos) != 0x00) {
-		bit_pos = 0x01 << pin_pos;
+	while ((pin >> pin_pos) != 0x00U) {
+		bit_pos = 0x01U << pin_pos;
 		uint32_t curr_pin = pin & bit_pos;
 
 		if (curr_pin) {
@@ -79,11 +79,11 @@ static inline void gpio_set_speed(uint32_t pin, uint8_t speed, uint8_t port) {
 
 static inline void gpio_write_pin(uint32_t pin, uint8_t val, uint8_t port) {
 	struct gpio *gpio = GPIO(BANK(port));
-	uint32_t pin_pos = 0x00;
+	uint32_t pin_pos = 0x00U;
 	uint32_t bit_pos;
 
-	while ((pin >> pin_pos) != 0x00) {
-		bit_pos = 0x01 << pin_pos;
+	while ((pin >> pin_pos) != 0x00U) {
+		bit_pos = 0x01U << pin_pos;
 		uint32_t curr_pin = pin & bit_pos;
 
 		if (curr_pin) {
@@ -102,7 +102,7 @@ static inline uint32_t gpio_read_pin(uint8_t port, uint32_t pin) {
 
 static inline void gpio_set_af(uint32_t pin, uint8_t af_num, uint8_t port) {
 	struct gpio *gpio = GPIO(BANK(port));
-	uint32_t pin_pos = 0x00;
+	uint32_t pin_pos = 0x00U;
 	uint32_t bit_pos;
 
 	/* 00000000 00000111 
@@ -110,8 +110,8 @@ static inline void gpio_set_af(uint32_t pin, uint8_t af_num, uint8_t port) {
 	 * * 4 = 28 = 00011100
 	 */
 
-	while ((pin >> pin_pos) != 0x00) {
-		bit_pos = 0x01 << pin_pos;
+	while ((pin >> pin_pos) != 0x00U) {
+		bit_pos = 0x01U << pin_pos;
 		uint32_t curr_pin = pin & bit_pos;
 
 		if (curr_pin) {

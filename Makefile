@@ -12,30 +12,31 @@ FIRMWARE_LD ?= f411re.ld
 FIRMWARE_SOURCES = main.c rcc.c startup_f411re.c uart.c syscalls.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h 
 
+
 build: firmware.elf bootloader.elf app.elf firmware.bin bootloader.bin app.bin
 
 flash: bootloader.bin firmware.bin
-	st-flash --reset write bootloader.bin 0x08000000
 	st-flash --reset write firmware.bin 0x08004000
+	st-flash write bootloader.bin 0x08000000
 
 app.elf: bootloader.elf firmware.elf
-	type bootloader.elf firmware.elf > $@
+	cat bootloader.elf firmware.elf > $@
 
 app.bin: bootloader.bin firmware.bin
-	type bootloader.bin firmware.bin > $@ 
+	cat bootloader.bin firmware.bin > $@ 
 
 firmware.bin: firmware.elf
 	arm-none-eabi-objcopy -O binary $< $@
 
 bootloader.bin: bootloader.elf
-	arm-none-eabi-objcopy -O binary $< $@
+	arm-none-eabi-objcopy --pad-to=0x4000 --gap-fill=0x200 -O binary $< $@
 
 firmware.elf: $(FIRMWARE_SOURCES) $(FIRMWARE_HEADER)
-	arm-none-eabi-gcc $(FIRMWARE_SOURCES) $(CFLAGS) -T $(FIRMWARE_LD) $(LDFLAGS) -o $@
+	arm-none-eabi-gcc $(FIRMWARE_SOURCES) $(CFLAGS) -T f411re.ld $(LDFLAGS) -o $@
 
 bootloader.elf: $(BOOTLOADER_SOURCES) $(BOOTLOADER_HEADER)
 	arm-none-eabi-gcc $(BOOTLOADER_SOURCES) $(CFLAGS) -T $(BOOTLOADER_LD) $(LDFLAGS) -o $@
 
 
 clean:
-	cmd /C del /Q /F *~ *.o *.elf *.map *.bin
+	rm -f *.o *.elf *.bin *.map
