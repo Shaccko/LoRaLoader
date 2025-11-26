@@ -7,8 +7,8 @@
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
 
-//#include <spi_raspi.h>
-//
+#include <spi_raspi.h>
+
 #define SPI_SPEED 1000000
 #define SPI_BITS 8
 #define SPI_MODE (SPI_MODE_0)
