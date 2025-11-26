@@ -8,8 +8,40 @@
 #include <linux/spi/spidev.h>
 
 //#include <spi_raspi.h>
+//
+#define SPI_SPEED 1000000
+#define SPI_BITS 8
+#define SPI_MODE (SPI_MODE_0)
 
-int main() {
+int spidev_transmit_receive(uint8_t* tx_buf, uint8_t tx_len, uint8_t* rx_buf) {
+	const char* dev = "/dev/spidev0.0";
+	int fd_dev = open(dev, O_RDWR);
+	if (fd_dev < 0) {
+		perror("SPI open failed\n");
+		return -1;
+	}
+
+	struct spi_ioc_transfer packet = {
+		.tx_buf = (unsigned long) tx_buf,
+		.rx_buf = (unsigned long) rx_buf,
+
+		.len = tx_len,
+		.speed_hz = (uint32_t) SPI_SPEED,
+
+		.bits_per_word = SPI_BITS,
+		.cs_change = 0,
+		.delay_usecs = 0
+	};
+
+	if (ioctl(fd_dev, SPI_IOC_MESSAGE(1), &packet) < 0) {
+		perror("Error in SPI transmission\n");
+		return -1;
+	}
+	
+	return 1;
+}
+
+int spidev_init(void) {
 	/* Coming from a bare-metal stm32 background, apparently
 	 * just enabling peripheral and sending ioctl with our 
 	 * struct msg buffer to spi is enough to get it to function
@@ -24,9 +56,9 @@ int main() {
 		return 1;
 	}
 	
-	uint32_t speed = 1000000;
-	uint8_t bits = 8;
-	uint8_t mode = SPI_MODE_0;
+	uint32_t speed = SPI_SPEED;
+	uint8_t bits = SPI_BITS;
+	uint8_t mode = SPI_MODE;
 
 	/* Set to Mode 0 */
 	ioctl(fd_spi, SPI_IOC_WR_MODE, &mode);
@@ -37,29 +69,9 @@ int main() {
 	/* Bits */
 	ioctl(fd_spi, SPI_IOC_WR_BITS_PER_WORD, &bits);
 
-	const char* msg_buf = "Hello";
-	uint64_t msg_rx_buf[10];
-	uint32_t msg_len = sizeof(msg_buf);
-
-	struct spi_ioc_transfer packet = {
-		.tx_buf = (unsigned long) msg_buf,
-		.rx_buf = (unsigned long) msg_rx_buf,
-
-		.len = msg_len,
-		.speed_hz = (uint32_t) speed,
-
-		.bits_per_word = bits,
-		.cs_change = 0,
-		.delay_usecs = 0
-	};
-
-	for(;;) {
-		ioctl(fd_spi, SPI_IOC_MESSAGE(1), &packet);
-		usleep(50 * 1000);
-	}
 
 	close(fd_spi);
 
-	return 0;
+	return 1;
 }
 

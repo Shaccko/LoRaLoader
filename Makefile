@@ -15,6 +15,9 @@ FIRMWARE_HEADER = rcc.h hal.h uart.h
 
 build: firmware.elf bootloader.elf firmware.bin bootloader.bin 
 
+spi_raspi: spi_raspi.c
+	gcc $< -o $@
+
 flash: bootloader.bin firmware.bin
 	st-flash --reset write firmware.bin 0x08004000
 	st-flash write bootloader.bin 0x08000000
@@ -33,4 +36,4 @@ bootloader.elf: $(BOOTLOADER_SOURCES) $(BOOTLOADER_HEADER)
 
 
 clean:
-	rm -f *.o *.elf *.bin *.map
+	rm -f *.o *.elf *.bin *.map spi_raspi
