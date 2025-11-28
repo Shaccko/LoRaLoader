@@ -1,12 +1,13 @@
 #include <LoRa_raspi.h>
 #include <gpio_raspi.h>
 
-#ifdef __arm__
+#if !defined(__linux__)
 #include <hal.h>
 #include <uart.h>
 #endif
 
 #include <string.h>
+#include <stddef.h>
 
 
 static inline uint8_t fifo_empty(struct lora* lora);
@@ -20,10 +21,10 @@ uint8_t new_lora(struct lora* lora) {
 	lora->dio0_pin = IRQ_PIN;
 
 	/* Set LoRa pins */
-	#ifdef __arm__
+	#if !defined(__arm__)
 	gpio_set_mode(lora->cs_pin|lora->rst_pin, GPIO_MODE_OUTPUT, LORA_PORT); 
 	gpio_write_pin(LORA_PORT, lora->cs_pin|lora->rst_pin, GPIO_PIN_SET); 
-	#elif __linux__
+	#elif defined(__linux__)
 	/* Set GPIO pins */
 	gpio_set_mode(lora->cs_pin|lora->rst_pin|lora->dio0_pin);
 	gpio_set_high(lora->cs_pin|lora->rst_pin|lora->dio0_pin);
