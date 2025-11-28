@@ -1,7 +1,9 @@
-CFLAGS  ?=  -W -Wall -Wextra -Wundef -Wshadow -Wdouble-promotion \
-            -Wformat-truncation -fno-common -Wconversion \
-            -g3 -Os -ffunction-sections -fdata-sections -I. \
-            -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 $(EXTRA_CFLAGS)
+ARMCFLAGS ?=  -W -Wall -Wextra -Wundef -Wshadow -Wdouble-promotion \
+            -Wformat-truncation -fno-common -Wconversion -I. \
+	    -ffunction-sections -fdata-sections \
+	    -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+CFLAGS ?= -W -Wall -Wextra -Wundef -Wshadow -Wdouble-promotion \
+	-Wformat-truncation -fno-common -Wconversion -I.
 LDFLAGS ?= -nostartfiles -nostdlib --specs nano.specs -lc -lgcc -Wl,--gc-sections -Wl,-Map=$@.map
 
 BOOTLOADER_LD ?= bootloader.ld
@@ -12,11 +14,14 @@ FIRMWARE_LD ?= f411re.ld
 FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c syscalls.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h 
 
+RASPI_SOURCES = raspi_main.c gpio_raspi.c LoRa_raspi.c spi_raspi.c
+RASPI_HEADERS = gpio_raspi.h LoRa_raspi.h spi_raspi.h
 
-build: firmware.elf bootloader.elf firmware.bin bootloader.bin 
 
-spi_raspi: spi_raspi.c
-	gcc $< -o $@
+build: firmware.elf bootloader.elf firmware.bin bootloader.bin ota_upload_raspi
+
+ota_upload_raspi: $(RASPI_SOURCES) $(RASPI_HEADERS)
+	gcc $(RASPI_SOURCES) $(CFLAGS) -o $@
 
 flash: bootloader.bin firmware.bin
 	st-flash --reset write firmware.bin 0x08004000
@@ -29,11 +34,10 @@ bootloader.bin: bootloader.elf
 	arm-none-eabi-objcopy --pad-to=0x4000 --gap-fill=0x200 -O binary $< $@
 
 firmware.elf: $(FIRMWARE_SOURCES) $(FIRMWARE_HEADER)
-	arm-none-eabi-gcc $(FIRMWARE_SOURCES) $(CFLAGS) -T f411re.ld $(LDFLAGS) -o $@
+	arm-none-eabi-gcc $(FIRMWARE_SOURCES) $(ARMCFLAGS) -T $(FIRMWARE_LD) $(LDFLAGS) -o $@
 
 bootloader.elf: $(BOOTLOADER_SOURCES) $(BOOTLOADER_HEADER)
-	arm-none-eabi-gcc $(BOOTLOADER_SOURCES) $(CFLAGS) -T $(BOOTLOADER_LD) $(LDFLAGS) -o $@
-
+	arm-none-eabi-gcc $(BOOTLOADER_SOURCES) $(ARMCFLAGS) -T $(BOOTLOADER_LD) $(LDFLAGS) -o $@
 
 clean:
 	rm -f *.o *.elf *.bin *.map spi_raspi
