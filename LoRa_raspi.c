@@ -1,13 +1,12 @@
 #include <LoRa_raspi.h>
+#include <gpio_raspi.h>
 
 #include <hal.h>
-#include <spi.h>
 #include <uart.h>
 #include <string.h>
 
 
 static inline uint8_t fifo_empty(struct lora* lora);
-
 
 uint8_t new_lora(struct lora* lora) {
 	uint8_t lora_version;
@@ -16,13 +15,10 @@ uint8_t new_lora(struct lora* lora) {
 	lora->cs_pin = CS_PIN;
 	lora->rst_pin = RST_PIN;
 	lora->dio0_pin = IRQ_PIN;
-	lora->lspi = spi1;
 
-	init_gpio();
-
-	/* Reconfig for raspi */
-	gpio_set_mode(CS_PIN|RST_PIN, GPIO_MODE_OUTPUT, LORA_PORT); /* Set CS pin */
-	gpio_write_pin(LORA_PORT, CS_PIN|RST_PIN, GPIO_PIN_SET); 
+	/* Set GPIO pins */
+	gpio_set_mode(lora->cs_pin, lora->rst_pin, lora->dio0_pin);
+	gpio_set_high(lora->cs_pin, lora->rst_pin, lora->dio0_pin);
 
 	/* Default values for loraWAN modem, don't care
 	 * about messing with these.
@@ -83,12 +79,7 @@ uint8_t new_lora(struct lora* lora) {
 	return lora_version == 0x12 ? OK : FAIL;
 }
 
-void init_gpio(void) {
-	/* Each FSEL has 10 pins */
-	const char* gpio_dev = "dev/gpiomem";
-	int fd = open(gpio_dev, O_SYNC | O_RDWR);
-	volatile uint32_t* gpio = mmap(NULL, more stuff);
-}
+
 
 
 
@@ -210,10 +201,9 @@ void lora_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
 	reg[0] = 0x80 | addr;
 	reg[1] = val;
 
-	/* Reconfig for raspi */
-	gpio_write_pin(LORA_PORT, CS_PIN, GPIO_PIN_RESET);
-	spi_transmit_receive(lora->lspi, reg, 0, reg_len);
-	gpio_write_pin(LORA_PORT, CS_PIN, GPIO_PIN_SET);
+	gpio_set_high(lora->cs_pin); 
+	spi_transmit_receive(reg, 0, reg_len);
+	gpio_set_high(lora->cs_pin); 
 }
 
 void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
@@ -224,11 +214,9 @@ void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
 	reg[0] = 0x80 | RegFifo;
 	memcpy(&reg[1], payload, payload_len);
 
-	/* Reconfig for raspi */
-	gpio_write_pin(lora->lora_port, lora->cs_pin, GPIO_PIN_RESET);
-	//spi_transmit_data(lora->lspi, reg, reg_len);
+	gpio_set_high(lora->cs_pin);
 	spi_transmit_receive(lora->lspi, reg, (uint8_t*)0, reg_len);
-	gpio_write_pin(lora->lora_port, lora->cs_pin, GPIO_PIN_SET);
+	gpio_set_high(lora->cs_pin);
 }
 
 
@@ -241,9 +229,9 @@ void lora_read_reg(struct lora* lora, uint8_t addr, uint8_t* out) {
 	reg[1] = 0;
 
 	/* Reconfig for raspi */
-	gpio_write_pin(lora->lora_port, lora->cs_pin, GPIO_PIN_RESET);
+	gpio_set_high(lora->cs_pin);
 	spi_transmit_receive(lora->lspi, reg, rx_buf, reg_len);
-	gpio_write_pin(lora->lora_port, lora->cs_pin, GPIO_PIN_SET);
+	gpio_set_high(lora->cs_pin);
 	
 	*out = rx_buf[1];
 }
@@ -257,13 +245,4 @@ void lora_set_mode(struct lora* lora, uint8_t mode) {
 	lora_write_reg(lora, RegOpMode, curr_op);
 	lora->curr_mode = mode;
 }
-
-	
-
-/* mode &= (7U);
- * mode |= (MODE)
- */
-
-
-
 

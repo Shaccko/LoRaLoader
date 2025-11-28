@@ -81,9 +81,6 @@
 #define OK 1
 #define FAIL 0
 
-/* GPIO Peripheral (pins 20-29) for CS/DIO/RST pins */
-#define GPIO_FSEL2 ((volatile uint32_t*) 0xFE200008)
-
 enum { SLEEP, STDBY, FSTX, TX, FSRX, RXCONT, RXSINGLE, CAD };
 
 struct lora {

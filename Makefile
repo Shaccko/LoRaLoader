@@ -9,7 +9,7 @@ BOOTLOADER_SOURCES = bootloader.c startup_bootloader.c rcc.c syscalls.c uart.c
 BOOTLOADER_HEADER = rcc.h hal.h uart.h
 
 FIRMWARE_LD ?= f411re.ld
-FIRMWARE_SOURCES = main.c rcc.c startup_f411re.c uart.c syscalls.c
+FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c syscalls.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h 
 
 
