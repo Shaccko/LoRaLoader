@@ -14,7 +14,7 @@ FIRMWARE_LD ?= f411re.ld
 FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c syscalls.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h 
 
-RASPI_SOURCES = raspi_main.c gpio_raspi.c LoRa_raspi.c spi_raspi.c
+RASPI_SOURCES = main_raspi.c gpio_raspi.c LoRa_raspi.c spi_raspi.c
 RASPI_HEADERS = gpio_raspi.h LoRa_raspi.h spi_raspi.h
 
 
