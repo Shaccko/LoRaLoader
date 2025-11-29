@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <stddef.h>
+#include <unistd.h>
 
 
 static inline uint8_t fifo_empty(struct lora* lora);
@@ -102,7 +103,8 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 	lora_read_reg(lora, RegIrqFlags, &reg);
 	while ((reg & 0x08U) == 0){
 		lora_read_reg(lora, RegIrqFlags, &reg);
-		delay(20); /* Incredibly important delay, crosstalk potential which can cause other pins to toggle (user LED) */
+		/* Should be less crosstalk potential for raspi */
+		usleep(5*1000); /* Incredibly important delay, crosstalk potential which can cause other pins to toggle (user LED) */
 	}
 	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Write 1 to clear flag */
 	lora_set_mode(lora, STDBY);
@@ -202,7 +204,7 @@ void lora_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
 	reg[1] = val;
 
 	gpio_raspi_set_high(lora->cs_pin);
-	spi_transmit_receive(lora->lspi, reg, (uint8_t*)0, reg_len);
+	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
 	gpio_raspi_set_high(lora->cs_pin);
 }
 
@@ -215,7 +217,7 @@ void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
 	memcpy(&reg[1], payload, payload_len);
 
 	gpio_raspi_set_high(lora->cs_pin);
-	spi_transmit_receive(lora->lspi, reg, (uint8_t*)0, reg_len);
+	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
 	gpio_raspi_set_high(lora->cs_pin);
 }
 
@@ -230,7 +232,7 @@ void lora_read_reg(struct lora* lora, uint8_t addr, uint8_t* out) {
 
 
 	gpio_raspi_set_high(lora->cs_pin);
-	spi_transmit_receive(lora->lspi, reg, rx_buf, reg_len);
+	spidev_transmit_receive(reg, rx_buf, reg_len);
 	gpio_raspi_set_high(lora->cs_pin);
 	
 	*out = rx_buf[1];

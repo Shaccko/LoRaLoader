@@ -9,7 +9,7 @@
 #define SPI_SPEED 10000000
 
 int spidev_init(void);
-int spidev_transmit_receive(uint8_t* tx_buf, uint8_t tx_len, uint8_t* rx_buf);
+int spidev_transmit_receive(uint8_t* tx_buf, uint8_t* rx_buf, size_t tx_len);
 
 
 #endif

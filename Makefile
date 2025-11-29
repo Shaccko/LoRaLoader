@@ -11,8 +11,8 @@ BOOTLOADER_SOURCES = bootloader.c startup_bootloader.c rcc.c syscalls.c uart.c
 BOOTLOADER_HEADER = rcc.h hal.h uart.h
 
 FIRMWARE_LD ?= f411re.ld
-FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c syscalls.c
-FIRMWARE_HEADER = rcc.h hal.h uart.h 
+FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c syscalls.c spi_stm32.c LoRa_stm32.c
+FIRMWARE_HEADER = rcc.h hal.h uart.h spi_stm32.h LoRa_stm32.h
 
 RASPI_SOURCES = main_raspi.c gpio_raspi.c LoRa_raspi.c spi_raspi.c
 RASPI_HEADERS = gpio_raspi.h LoRa_raspi.h spi_raspi.h

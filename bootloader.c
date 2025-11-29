@@ -14,9 +14,9 @@ static inline void blink_led(void) {
 
 	size_t i;
 	for (i = 0; i < 10; i++) {
-		gpio_write_pin(led_pin, GPIO_PIN_SET, led_port);
+		gpio_write_pin(led_port, led_pin, GPIO_PIN_SET);
 		delay(50);
-		gpio_write_pin(led_pin, GPIO_PIN_RESET, led_port);
+		gpio_write_pin(led_port, led_pin, GPIO_PIN_RESET);
 		delay(50);
 	}
 }
