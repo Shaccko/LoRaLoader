@@ -2,8 +2,8 @@
 #define LORA_H__
 
 #include <stdint.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
+#include <stddef.h>
+#include <hal.h>
 
 /* FiFo buffer and OP modes */
 #define RegFifo 0x00

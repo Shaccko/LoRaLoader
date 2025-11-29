@@ -10,7 +10,7 @@
 enum { GPIO_PIN_INPUT, GPIO_PIN_OUTPUT };
 
 int alloc_gpio(volatile uint32_t* gpio);
-void gpio_set_mode(uint32_t pins, uint8_t mode);
-void gpio_set_high(uint32_t pins);
+void gpio_raspi_set_mode(uint32_t pins, uint8_t mode);
+void gpio_raspi_set_high(uint32_t pins);
 
 #endif

@@ -37,9 +37,10 @@ static int alloc_gpio(volatile uint32_t* gpio) {
 	return 0;
 }
 
-void gpio_set_high(uint32_t pins) {
+void gpio_raspi_set_high(uint32_t pins) {
+	volatile uint32_t* gpio = 0;
+	static uint8_t gpset = 7;
 
-	volatile uint32_t* gpio;
 	if (alloc_gpio(gpio) < 0) {
 		perror("Error obtaining GPIO mmap\n");
 		return;
@@ -50,18 +51,15 @@ void gpio_set_high(uint32_t pins) {
 		bit_pos = 0x01U << pin_pos;
 		uint32_t curr_pin = pins & bit_pos;
 		if (curr_pin){
-			static uint8_t gpset = 7;
-			gpio[gpset] = 1 << pin_pos;
+			gpio[gpset] = 1U << pin_pos;
 		}
 		pin_pos++;
 	}
 }
 
 
-void gpio_set_mode(uint32_t pins, uint8_t mode) {
-	static uint8_t gpset = 7;
-
-	volatile uint32_t* gpio;
+void gpio_raspi_set_mode(uint32_t pins, uint8_t mode) {
+	volatile uint32_t* gpio = 0;
 	alloc_gpio(gpio);
 
 	uint32_t pin_pos = 0x00U, bit_pos;
@@ -74,7 +72,7 @@ void gpio_set_mode(uint32_t pins, uint8_t mode) {
 
 			/* Clear and set as output */
 			gpio[fsel] &= ~(7U << pin_bit);
-			gpio[fsel] |= mode << pin_bit;
+			gpio[fsel] |= ((uint32_t) mode << pin_bit);
 		}
 		pin_pos++;
 	}
