@@ -64,9 +64,9 @@
 /* LoRa pins definitions */
 #define LORA_PORT 'B'
 /* Reconfig for raspi */
-#define CS_PIN (PIN_NUM(0))
-#define RST_PIN (PIN_NUM(5))
-#define IRQ_PIN (PIN_NUM(3))
+#define CS_PIN (PIN_NUM(27))
+#define RST_PIN (PIN_NUM(22))
+#define IRQ_PIN (PIN_NUM(23))
 
 /* LoRaWAN modem definitions */
 #define FREQ_433 433
@@ -85,7 +85,7 @@ enum { SLEEP, STDBY, FSTX, TX, FSRX, RXCONT, RXSINGLE, CAD };
 
 struct lora {
 	uint8_t lora_port;
-	uint16_t cs_pin, rst_pin, dio0_pin;
+	uint32_t cs_pin, rst_pin, dio0_pin;
 	struct spi* lspi;
 
 	uint32_t freq, ocp;

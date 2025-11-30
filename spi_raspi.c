@@ -67,7 +67,8 @@ int spidev_transmit_receive(uint8_t* tx_buf, uint8_t* rx_buf,  size_t tx_len) {
 		perror("Error in SPI transmission\n");
 		return -1;
 	}
-	
+
+	close(fd_dev);
 	return 1;
 }
 
