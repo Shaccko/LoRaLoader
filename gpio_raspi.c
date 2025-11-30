@@ -10,7 +10,7 @@ static int alloc_gpio(volatile uint32_t** gpio) {
 	/* Each FSEL has 10 pins */
 	const char* gpio_dev = "/dev/gpiomem";
 	static uint32_t block_size = 4*1024; /* Page size length, which is less than GPIO's peripheral size */
-	static uint32_t gpio_base = 0x7E200000;
+	static uint32_t gpio_base = 0x7A200000;
 	int fd = open(gpio_dev, O_SYNC | O_RDWR);
 	if (fd < 0) {
 		perror("Error opening gpiomem\n");
