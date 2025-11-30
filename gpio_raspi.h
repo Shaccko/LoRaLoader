@@ -3,14 +3,11 @@
 
 #include <stdint.h>
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/mman.h>
+enum { PIN_INPUT, PIN_OUTPUT };
+enum { PIN_SET, PIN_RESET };
 
-enum { GPIO_PIN_INPUT, GPIO_PIN_OUTPUT };
-
-int alloc_gpio(volatile uint32_t* gpio);
+int gpio_alloc(void);
 void gpio_raspi_set_mode(uint32_t pins, uint8_t mode);
-void gpio_raspi_set_high(uint32_t pins);
+void gpio_raspi_write_pin(uint32_t pins, uint8_t state);
 
 #endif

@@ -18,8 +18,8 @@ uint8_t new_lora(struct lora* lora) {
 	lora->dio0_pin = IRQ_PIN;
 
 	/* Set GPIO pins */
-	gpio_raspi_set_mode(lora->cs_pin|lora->rst_pin|lora->dio0_pin, GPIO_PIN_OUTPUT);
-	gpio_raspi_set_high(lora->cs_pin|lora->rst_pin|lora->dio0_pin);
+	gpio_raspi_set_mode(lora->cs_pin|lora->rst_pin|lora->dio0_pin, PIN_OUTPUT);
+	gpio_raspi_write_pin(lora->cs_pin|lora->rst_pin|lora->dio0_pin, PIN_SET);
 
 	/* Default values for loraWAN modem, don't care
 	 * about messing with these.
@@ -77,6 +77,7 @@ uint8_t new_lora(struct lora* lora) {
 	lora_read_reg(lora, RegVersion, &lora_version);
 	
 	/* We expect it to return 0x12, according to register datasheet */
+	printf("lora_version:%X\n", lora_version);
 	return lora_version == 0x12 ? OK : FAIL;
 }
 
@@ -199,9 +200,9 @@ void lora_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
 	reg[0] = 0x80 | addr;
 	reg[1] = val;
 
-	gpio_raspi_set_high(lora->cs_pin);
+	gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
 	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
-	gpio_raspi_set_high(lora->cs_pin);
+	gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
 }
 
 void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
@@ -212,9 +213,9 @@ void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
 	reg[0] = 0x80 | RegFifo;
 	memcpy(&reg[1], payload, payload_len);
 
-	gpio_raspi_set_high(lora->cs_pin);
+	gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
 	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
-	gpio_raspi_set_high(lora->cs_pin);
+	gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
 }
 
 
@@ -227,10 +228,10 @@ void lora_read_reg(struct lora* lora, uint8_t addr, uint8_t* out) {
 	reg[1] = 0;
 
 
-	gpio_raspi_set_high(lora->cs_pin);
+	gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
 	spidev_transmit_receive(reg, rx_buf, reg_len);
-	gpio_raspi_set_high(lora->cs_pin);
-	
+	gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
+
 	*out = rx_buf[1];
 }
 
