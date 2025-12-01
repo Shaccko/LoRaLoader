@@ -51,9 +51,11 @@ void gpio_raspi_write_pin(uint32_t pins, uint8_t state) {
 			uint8_t gpclr = (uint8_t)(10U + (pin_pos >> 5));
 			/* Get pin offset bit */
 			if (state == PIN_SET) {
+				printf("%d is high\n", pin_pos);
 				gpio[gpset] |= 1U << (pin_pos % 32);
 			}
 			if (state == PIN_RESET) {
+				printf("%d is low\n", pin_pos);
 				gpio[gpclr] |= 1U << (pin_pos % 32);
 			}
 		}

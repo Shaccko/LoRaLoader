@@ -1,5 +1,6 @@
 __attribute__((naked, noreturn)) void _reset(void) {
 	extern long _sbss, _ebss, _sidata, _sdata, _edata;
+	/* Set VTO to app's vec table */
 	(*(long*) 0xE000ED08) = 0x08004000;
 
 	for (long* dst = &_sbss; dst < &_ebss; dst++) *dst = 0;

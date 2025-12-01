@@ -22,6 +22,12 @@ static inline void blink_led(void) {
 }
 
 
+/* According to ARM's startup procedure, our SP and vec table 
+ * gets fetched from our applications very first address, 
+ * +4 that and we grab PC and _reset, knowing this we can 
+ * execute some asm to place our MSP on app, and inside _reset of 
+ * app, make sure we change our vec table to our application.
+ */
 void boot(void) {
 	extern uint32_t __app_start;
 
@@ -30,25 +36,37 @@ void boot(void) {
 
 	/* Bootloader stuff */
 	printf("Inside bootloader!\r\n");
-	uint32_t app_flash = (uint32_t)(&__app_start);
+
+	/* Does code exist? We check this by AND'ing MSP that could 
+	 * *potentially* sit at 0x00000000 of our main app
+	 */
+	uint32_t app_flash = (uint32_t)(&__app_start); /* Grab address of app's start symbol from linker */
 	if (((*(uint32_t*) app_flash) & 0x2FFE0000) == 0x20020000) {
 		blink_led();
 
-		/* Disable IRQ and systick for critical statements */
+		/* Disable systick for critical statements */
 		SYSTICK->CTRL = 0;
 		SYSTICK->LOAD = 0;
 		SYSTICK->VAL = 0;
 
+		/* Grab msp (start of app's addr) 
+		 * and reset (+4 from start)
+		 */
 		uint32_t vt_msp = (*(uint32_t*)app_flash);
 		uint32_t reset = (*(uint32_t*)(app_flash + 4));
 		void (*app)(void) = ((void(*)(void)) reset);
 
+		/* Some asm to switch msp from bootloader to main app */
 		__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
+
+		/* Execute _reset of app */
 		app();
 	}
 	else {
+		printf("No application exists.\n");
 	}
 
+	/* Run forever */
 	for(;;);
 }
 

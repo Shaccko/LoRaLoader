@@ -9,10 +9,12 @@ LDFLAGS ?= -nostartfiles -nostdlib --specs nano.specs -lc -lgcc -Wl,--gc-section
 BOOTLOADER_LD ?= bootloader.ld
 BOOTLOADER_SOURCES = bootloader.c startup_bootloader.c rcc.c syscalls.c uart.c 
 BOOTLOADER_HEADER = rcc.h hal.h uart.h
+BOOTLOADER_ADDR = 0x08000000
 
 FIRMWARE_LD ?= f411re.ld
 FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c syscalls.c spi_stm32.c LoRa_stm32.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h spi_stm32.h LoRa_stm32.h
+FIRMWARE_ADDR = 0x08004000
 
 RASPI_SOURCES = main_raspi.c gpio_raspi.c LoRa_raspi.c spi_raspi.c
 RASPI_HEADERS = gpio_raspi.h LoRa_raspi.h spi_raspi.h
@@ -23,9 +25,12 @@ build: firmware.elf bootloader.elf firmware.bin bootloader.bin ota_upload_raspi
 ota_upload_raspi: $(RASPI_SOURCES) $(RASPI_HEADERS)
 	gcc $(RASPI_SOURCES) $(CFLAGS) -o $@
 
-flash: bootloader.bin firmware.bin
-	st-flash --reset write firmware.bin 0x08004000
-	st-flash write bootloader.bin 0x08000000
+flash: firmware.bin
+	st-flash --reset write $< $(FIRMWARE_ADDR)
+
+flash-all: bootloader.bin firmware.bin
+	st-flash --reset write firmware.bin $(FIRMWARE_ADDR) 
+	st-flash write bootloader.bin $(BOOTLOADER_ADDR)
 
 firmware.bin: firmware.elf
 	arm-none-eabi-objcopy -O binary $< $@

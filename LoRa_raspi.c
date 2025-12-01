@@ -10,7 +10,6 @@
 static inline uint8_t fifo_empty(struct lora* lora);
 
 uint8_t new_lora(struct lora* lora) {
-	uint8_t lora_version;
 	/* Default pins */
 	lora->lora_port = LORA_PORT;
 	lora->cs_pin = CS_PIN;
@@ -38,46 +37,11 @@ uint8_t new_lora(struct lora* lora) {
 	/* Initialize LoRa */
 	lora_set_mode(lora, SLEEP);
 	lora_write_reg(lora, RegOpMode, 0x80); /* Set RegOP to LoRa mode */
-	
-	/* Set frequency, output power gain, OCP, LNA gain, 
-	 * SF, CRC, timeout MSB, timeout LSB, bandwidth, coding rate, explicit mode,
-	 * preaamble, DI0 mapping then goto standby mode for further operations by user
-	 * end with a version check for validity. 
-	 */
-	
-	/* Essentially these registers below set range parameters and over current protection. */
-	/* FRF = (F_rf * 2^19)/32MHz */
-	lora_set_freq(lora, lora->freq);
-
-	/* Power Gain */
-	lora_write_reg(lora, RegGainConfig, lora->db_pwr);
-
-	/* OCP */
-	lora_set_ocp(lora);
-
-	/* Set LNA Gain */
-	lora_set_lnahigh(lora); 
-
-	/* Set BW, CR */
-	lora_set_modemconfig1(lora, lora->bw, lora->code_rate);
-
-	/* CF, CRC, Timeout */
-	lora_set_modemconfig2(lora, lora->sf);
-
-	/* DIO mapping, using DIO0 */
-	lora_write_reg(lora, RegDioMapping1, 0x3F); /* Setting DIO0, rest to none */
-
-	/* Set Preamble */
-	lora_write_reg(lora, RegPreambleMsb, (uint8_t)(lora->preamb >> 8U));
-	lora_write_reg(lora, RegPreambleLsb, (uint8_t)(lora->preamb >> 0U));
-
-	/* Registers set, STDBY for future operations, check LoRa with version read */
-	lora_set_mode(lora, STDBY);
-
+	uint8_t lora_version;
 	lora_read_reg(lora, RegVersion, &lora_version);
 	
 	/* We expect it to return 0x12, according to register datasheet */
-	printf("lora_version:%X\n", lora_version);
+
 	return lora_version == 0x12 ? OK : FAIL;
 }
 
@@ -106,13 +70,12 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Write 1 to clear flag */
 	lora_set_mode(lora, STDBY);
 
-
-
 	return OK;
 }
 
 uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
 	if (!fifo_empty(lora)) return FAIL;
+
 	lora_set_mode(lora, STDBY);
 	
 	uint8_t reg;
@@ -227,10 +190,11 @@ void lora_read_reg(struct lora* lora, uint8_t addr, uint8_t* out) {
 	reg[0] = addr & 0x7F; 
 	reg[1] = 0;
 
-
+	printf("Transmitting\n");
 	gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
 	spidev_transmit_receive(reg, rx_buf, reg_len);
 	gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
+	printf("Done transmission\n");
 
 	*out = rx_buf[1];
 }

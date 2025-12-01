@@ -9,6 +9,8 @@
 
 #include <spi_raspi.h>
 
+int fd_spi;
+
 int spidev_init(void) {
 	/* Coming from a bare-metal stm32 background, apparently
 	 * just enabling peripheral and sending ioctl with our 
@@ -16,13 +18,11 @@ int spidev_init(void) {
 	 *
 	 * ioctl(device, register_request, reg_value) - typical syntax
 	 */
-	const char* dev = "/dev/spidev0.0";
-	int fd_spi = open(dev, O_RDWR);
-
-	if (fd_spi < 0) {
+	if (open_spidev() < 0) {
 		perror("SPI device failed\n");
 		return 1;
 	}
+	
 	
 	uint32_t speed = SPI_SPEED;
 	uint8_t bits = SPI_BITS;
@@ -33,43 +33,50 @@ int spidev_init(void) {
 
 	/* Max speed */
 	ioctl(fd_spi, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
+	ioctl(fd_spi, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
+
+	/* ??? */
+	uint8_t i = 0;
+	ioctl(fd_spi, SPI_IOC_WR_LSB_FIRST, &i);
+	ioctl(fd_spi, SPI_IOC_RD_LSB_FIRST, &i);
 
 	/* Bits */
 	ioctl(fd_spi, SPI_IOC_WR_BITS_PER_WORD, &bits);
 
 
-	close(fd_spi);
 
 	return 1;
 }
 
-int spidev_transmit_receive(uint8_t* tx_buf, uint8_t* rx_buf,  size_t tx_len) {
-	const char* dev = "/dev/spidev0.0";
-	int fd_dev = open(dev, O_RDWR);
-	if (fd_dev < 0) {
-		perror("SPI open failed\n");
-		return -1;
-	}
+int spidev_transmit_receive(uint8_t* mosi_buf, uint8_t* miso_buf,  size_t mosi_len) {
+	struct spi_ioc_transfer packet = { 
+		.tx_buf = (unsigned long) mosi_buf,
+		.rx_buf = (unsigned long) miso_buf,
 
-	struct spi_ioc_transfer packet = {
-		.tx_buf = (unsigned long) tx_buf,
-		.rx_buf = (unsigned long) rx_buf,
+		.len = 2,
+		.speed_hz = 0,
 
-		.len = tx_len,
-		.speed_hz = (uint32_t) SPI_SPEED,
-
-		.bits_per_word = SPI_BITS,
+		.bits_per_word = 8,
 		.cs_change = 0,
-		.delay_usecs = 0
 	};
 
-	if (ioctl(fd_dev, SPI_IOC_MESSAGE(1), &packet) < 0) {
+	if (ioctl(fd_spi, SPI_IOC_MESSAGE(1), &packet) < 0) {
 		perror("Error in SPI transmission\n");
 		return -1;
 	}
-
-	close(fd_dev);
 	return 1;
+}
+
+int open_spidev(void) {
+	fd_spi = open("/dev/spidev0.0", O_RDWR);
+
+	if (fd_spi < 0) return -1;
+
+	return 1;
+}
+
+void close_spidev(void) {
+	close(fd_spi);
 }
 
 
