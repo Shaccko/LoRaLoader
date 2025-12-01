@@ -20,7 +20,7 @@ int spidev_init(void) {
 	 */
 	if (open_spidev() < 0) {
 		perror("SPI device failed\n");
-		return 1;
+		return -1;
 	}
 	
 	
@@ -35,15 +35,14 @@ int spidev_init(void) {
 	ioctl(fd_spi, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
 	ioctl(fd_spi, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
 
-	/* ??? */
-	uint8_t i = 0;
-	ioctl(fd_spi, SPI_IOC_WR_LSB_FIRST, &i);
-	ioctl(fd_spi, SPI_IOC_RD_LSB_FIRST, &i);
-
 	/* Bits */
 	ioctl(fd_spi, SPI_IOC_WR_BITS_PER_WORD, &bits);
 
-
+	/* ya */
+	uint8_t i = 0;
+	ioctl(fd_spi, SPI_IOC_RD_MODE, &i);
+	mode |= SPI_NO_CS;
+	ioctl(fd_spi, SPI_IOC_WR_MODE, &i);
 
 	return 1;
 }
@@ -53,11 +52,11 @@ int spidev_transmit_receive(uint8_t* mosi_buf, uint8_t* miso_buf,  size_t mosi_l
 		.tx_buf = (unsigned long) mosi_buf,
 		.rx_buf = (unsigned long) miso_buf,
 
-		.len = 2,
-		.speed_hz = 0,
+		.len = mosi_len,
+		.speed_hz = SPI_SPEED,
+		.cs_change = 0,
 
 		.bits_per_word = 8,
-		.cs_change = 0,
 	};
 
 	if (ioctl(fd_spi, SPI_IOC_MESSAGE(1), &packet) < 0) {

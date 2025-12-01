@@ -14,7 +14,7 @@ int main() {
 
 	struct lora lora;
 
-	open_spidev();
+		open_spidev();
 		uint8_t status = new_lora(&lora);
 		if (status) {
 			printf("LoRa detected\n");
@@ -22,9 +22,7 @@ int main() {
 		else {
 			printf("Error\n");
 		}
-
-		usleep(500* 1000);
-	close_spidev();
+		close_spidev();
 	
 	/*
 	 * int fd_bin = open(arg[1], O_RDONLY);

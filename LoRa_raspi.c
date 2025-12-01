@@ -163,9 +163,9 @@ void lora_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
 	reg[0] = 0x80 | addr;
 	reg[1] = val;
 
-	gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
+	//gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
 	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
-	gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
+	//gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
 }
 
 void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
@@ -176,9 +176,9 @@ void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
 	reg[0] = 0x80 | RegFifo;
 	memcpy(&reg[1], payload, payload_len);
 
-	gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
+	//gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
 	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
-	gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
+	//gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
 }
 
 
@@ -190,11 +190,9 @@ void lora_read_reg(struct lora* lora, uint8_t addr, uint8_t* out) {
 	reg[0] = addr & 0x7F; 
 	reg[1] = 0;
 
-	printf("Transmitting\n");
-	gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
+	//gpio_raspi_write_pin(lora->cs_pin, PIN_RESET);
 	spidev_transmit_receive(reg, rx_buf, reg_len);
-	gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
-	printf("Done transmission\n");
+	//gpio_raspi_write_pin(lora->cs_pin, PIN_SET);
 
 	*out = rx_buf[1];
 }
