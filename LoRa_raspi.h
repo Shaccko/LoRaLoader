@@ -93,16 +93,16 @@ struct lora {
 };
 
 uint8_t new_lora(struct lora* lora);
-void lora_write_reg(struct lora* lora, uint8_t addr, uint8_t val);
-void lora_read_reg(struct lora* lora, uint8_t addr, uint8_t* out);
 void lora_set_mode(struct lora* lora, uint8_t mode);
-void lora_set_modemconfig2(struct lora* lora, uint8_t sf);
-void lora_set_modemconfig1(struct lora* lora, uint8_t bw, uint8_t code_rate);
-void lora_set_lnahigh(struct lora* lora);
-void lora_set_ocp(struct lora* lora);
-void lora_set_freq(struct lora* lora, uint32_t freq);
+void lora_set_modemconfig2(uint8_t sf);
+void lora_set_modemconfig1(uint8_t bw, uint8_t code_rate);
+void lora_set_lnahigh(void);
+void lora_set_ocp(void);
+void lora_set_freq(uint32_t freq);
 uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len);
 uint8_t lora_receive(struct lora* lora, uint8_t* buf);
-void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len);
+void lora_burstwrite(uint8_t* payload, size_t payload_len);
+void lora_write_reg(uint8_t addr, uint8_t val);
+void lora_read_reg(uint8_t addr, uint8_t* out);
 
 #endif

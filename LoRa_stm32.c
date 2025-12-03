@@ -20,7 +20,7 @@ uint8_t new_lora(struct lora* lora) {
 
 	gpio_set_mode(CS_PIN|RST_PIN, GPIO_MODE_OUTPUT, LORA_PORT);
 	gpio_set_mode(IRQ_PIN, GPIO_MODE_INPUT, LORA_PORT);
-	exti_set_pin(IRQ_PIN, LORA_PORT); 
+	enable_line_interrupt(0, LORA_PORT, RISING);  /* Set EXTI0, on port B */
 	/* Set CS pin */ 
 	gpio_write_pin(LORA_PORT, CS_PIN|RST_PIN, GPIO_PIN_SET); 
 
