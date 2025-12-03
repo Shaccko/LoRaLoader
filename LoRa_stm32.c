@@ -18,7 +18,10 @@ uint8_t new_lora(struct lora* lora) {
 	lora->dio0_pin = IRQ_PIN;
 	lora->lspi = spi1;
 
-	gpio_set_mode(CS_PIN|RST_PIN, GPIO_MODE_OUTPUT, LORA_PORT); /* Set CS pin */ 
+	gpio_set_mode(CS_PIN|RST_PIN, GPIO_MODE_OUTPUT, LORA_PORT);
+	gpio_set_mode(IRQ_PIN, GPIO_MODE_INPUT, LORA_PORT);
+	exti_set_pin(IRQ_PIN, LORA_PORT); 
+	/* Set CS pin */ 
 	gpio_write_pin(LORA_PORT, CS_PIN|RST_PIN, GPIO_PIN_SET); 
 
 	/* Default values for loraWAN modem, don't care

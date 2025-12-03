@@ -7,6 +7,8 @@
 
 #include <gpio_raspi.h>
 
+/* ------------ NOT IN USE ------------- */
+
 static volatile uint32_t* gpio;
 
 int gpio_alloc(void) {

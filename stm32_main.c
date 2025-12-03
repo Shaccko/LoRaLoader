@@ -15,11 +15,15 @@ int main() {
 
 	struct lora lora;
 
+	/* Things for IRQs:
+	 * SYSCFG_EXTICRx
+	 * Config port-pin in input mode
+	 */
+
 	for(;;) {
 		uint8_t status = new_lora(&lora);
 		if (status) printf("LoRa detected\r\n");
 
-		printf("Done execution\r\n");
 		delay(500);
 	}
 

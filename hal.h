@@ -12,7 +12,7 @@
 
 #define BIT(x) (1UL << (x))
 #define GPIO(bank) ((struct gpio*) (0x40020000 + 0x400 * (bank)))
-#define PIN(bank, num) ((((bank) - 'A') << 8) | (num))
+//#define PIN(bank, num) ((((bank) - 'A') << 8) | (num))
 #define PIN_NUM(pin) (1U << (pin))
 #define PINBANK(pin) (pin >> 8)
 #define BANK(port) ((port) - 'A')
@@ -21,17 +21,44 @@
 #define GPIO_PIN_RESET 0
 #define GPIO_MODE_AF_OD (GPIO_MODE_AF | 0x40)
 
+/* GPIO Periph block */
+#define GPIO(bank) ((struct gpio*) (0x40020000 + 0x400 * (bank)))
+
+/* VTOR offset */
 #define SCB ((struct scb*) (0xE000ED00))
+
+/* SYS Ctrl or something like that under ARM hardware */
+/* Just using it for FPU */
+#define CPACR ((volatile uint32_t*) 0xE000ED88) /* Address to enable FPU */
+
+/* To config EXTI */
+#define SYSCFG ((struct syscfg*) (0x40013800))
+#define EXTI ((struct exti*) (0x40013C00))
+#define NVIC_ISER(x) ((volatile uint32_t*) 0xE000E100 * (x))
+
+static const uint8_t EXTI_IRQ[7] = {
+	6, 7, 8, 9, 10, /*EXTI0-4*/
+	23, /*EXTI[9:5]*/
+	40  /*EXTI[15:10]*/
+} 
 
 struct scb {
 	volatile uint32_t CPUID, ICSR, VTOR, AIRCR, SCR, CCR, SHPR1, SHPR2,
 		 SHCSR;
 };
 
+struct syscfg {
+	volatile uint32_t MEMRMP, PMC, EXTICR[4], CMPCR;
+};
+
 struct gpio {
 	volatile uint32_t MODER, OTYPER, OSPEEDR, PUPDR, IDR, ODR, BSRR, LCKR,
 		 AFR[2];
 };
+
+struct exti {
+	volatile uint32_t IMR, EMR, RTSR, FTSR, SWIER, PR;
+}
 
 enum { GPIO_MODE_INPUT, GPIO_MODE_OUTPUT, GPIO_MODE_AF, GPIO_MODE_ANALOG };
 enum { LOW_SPEED, MED_SPEED, FAST_SPEED, HIGH_SPEED };
@@ -120,6 +147,29 @@ static inline void gpio_set_af(uint32_t pin, uint8_t af_num, uint8_t port) {
 		pin_pos++;
 	}
 }
+
+static inline void enable_line_interrupt(uint8_t line, uint8_t port, uint8_t trigger_type) {
+	struct syscfg* syscfg = SYSCFG;
+	struct exti* exti = EXTI;
+	struct nvic* nvic = NVIC;
+
+	/* Set EXTICR according to line */
+	syscfg->EXTICR[line >> 2] &= ~(0xf);
+	syscfg->EXTICR[line >> 2] |= (port - 'A') << (line & 3);
+
+	/* Set trigger mode on line */
+	if (trigger_type == RISING) {
+		exti->RTSR |= (1U << line);
+	}
+	else if (trigger_type == FALLING) {
+		exti->FTSR |= (1U << line);
+	}
+
+	/* Enable NVIC based on line */
+	*NVIC_ISER(line >> 5) = (uint32_t) (1U << EXTI_IRQ[line]);
+}
+
+
 static inline void disable_irq(void) {
 	__asm volatile ("cpsid i" : : : "memory");
 }

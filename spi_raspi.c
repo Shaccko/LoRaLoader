@@ -38,12 +38,6 @@ int spidev_init(void) {
 	/* Bits */
 	ioctl(fd_spi, SPI_IOC_WR_BITS_PER_WORD, &bits);
 
-	/* ya */
-	uint8_t i = 0;
-	ioctl(fd_spi, SPI_IOC_RD_MODE, &i);
-	mode |= SPI_NO_CS;
-	ioctl(fd_spi, SPI_IOC_WR_MODE, &i);
-
 	return 1;
 }
 

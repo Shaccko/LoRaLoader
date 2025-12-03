@@ -8,12 +8,10 @@
 
 
 int main() {
-
-	gpio_alloc();
 	spidev_init();
-
 	struct lora lora;
 
+	for (;;) {
 		open_spidev();
 		uint8_t status = new_lora(&lora);
 		if (status) {
@@ -23,6 +21,7 @@ int main() {
 			printf("Error\n");
 		}
 		close_spidev();
+	}
 	
 	/*
 	 * int fd_bin = open(arg[1], O_RDONLY);
