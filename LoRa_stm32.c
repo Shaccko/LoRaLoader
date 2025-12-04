@@ -1,8 +1,9 @@
 #include <LoRa_stm32.h>
-
 #include <hal.h>
 #include <spi_stm32.h>
 #include <uart.h>
+#include <exti.h>
+
 #include <string.h>
 
 
@@ -244,9 +245,3 @@ void lora_set_mode(struct lora* lora, uint8_t mode) {
 	lora_write_reg(lora, RegOpMode, curr_op);
 	lora->curr_mode = mode;
 }
-
-	
-
-/* mode &= (7U);
- * mode |= (MODE)
- */
