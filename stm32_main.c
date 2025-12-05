@@ -17,22 +17,18 @@ int main() {
 	spi1_init();
 	systick_init();
 
-	/* Things for IRQs:
-	 * SYSCFG_EXTICRx
-	 * Config port-pin in input mode
-	 */
-
 	uint8_t status = new_lora(&lora);
 	if (status) {
 		printf("LoRa detected\r\n");
-		lora_set_mode(&lora, RXSINGLE);
 	}
-
+	
+	lora_set_mode(&lora, RXSINGLE);
 	for(;;) {
 		if (rx_ready) {
-			printf("rx_buf: %s", rx_buf);
+			printf("rx_buf: %s\r\n", rx_buf);
 		}
 
+		lora_transmit(&lora, (uint8_t*)"Hello", 5);
 		printf("Done loop execution\r\n");
 		delay(500);
 	}

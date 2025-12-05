@@ -23,14 +23,18 @@ int main() {
 	struct lora lora;
 
 	open_spidev();
+	uint8_t status = new_lora(&lora);
+	if (status) {
+		printf("LoRa detected\n");
+	}
+	else {
+		printf("Error\n");
+	}
+
+	uint32_t counter = 0;
 	while (!stop) {
-		uint8_t status = new_lora(&lora);
-		if (status) {
-			printf("LoRa detected\n");
-		}
-		else {
-			printf("Error\n");
-		}
+		if (lora_transmit(&lora, (uint8_t*)"Hello", 5))
+			printf("Transmitted LoRa message %d\n", counter++);
 
 		usleep(500*1000);
 	}

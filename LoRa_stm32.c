@@ -69,7 +69,10 @@ uint8_t new_lora(struct lora* lora) {
 	lora_set_modemconfig2(lora, lora->sf);
 
 	/* DIO mapping, using DIO0 */
-	lora_write_reg(lora, RegDioMapping1, 0x3F); /* Setting DIO0, rest to none */
+	uint8_t read, data;
+	lora_read_reg(lora, RegDioMapping1, &read);
+	data = read; 
+	lora_write_reg(lora, RegDioMapping1, data); /* Setting DIO0, rest to none */
 
 	/* Set Preamble */
 	lora_write_reg(lora, RegPreambleMsb, (uint8_t)(lora->preamb >> 8));
@@ -87,6 +90,8 @@ uint8_t new_lora(struct lora* lora) {
 uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 
 	uint8_t reg;
+	uint8_t lora_mode = lora->curr_mode;
+
 	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Pre-clear all flags */
 
 	lora_set_mode(lora, STDBY);
@@ -106,7 +111,7 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 		delay(20); /* Incredibly important delay, crosstalk potential which can cause other pins to toggle (user LED) */
 	}
 	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Write 1 to clear flag */
-	lora_set_mode(lora, STDBY);
+	lora_set_mode(lora, lora_mode);
 
 
 
@@ -114,7 +119,6 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 }
 
 uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
-	if (!fifo_empty(lora)) return FAIL;
 	lora_set_mode(lora, STDBY);
 	
 	uint8_t reg;
@@ -159,7 +163,11 @@ static inline uint8_t fifo_empty(struct lora* lora) {
 
 
 void lora_set_modemconfig2(struct lora* lora, uint8_t sf) {
-	uint8_t reg_val = (uint8_t) (sf << 4U); /* Set TxCont, RxPayload on, RXTimeOut */
+	uint8_t reg_val;
+	uint8_t read;
+
+	lora_read_reg(lora, RegModemConfig2, &read);
+	reg_val = (read | ((uint8_t) (sf << 4U)) | 0x05U);
 	lora_write_reg(lora, RegModemConfig2, reg_val);
 	lora_write_reg(lora, RegSymbTimeoutLsb, 0xFFU); /* Set LSB TimeOut */
 }
