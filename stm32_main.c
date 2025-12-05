@@ -6,9 +6,11 @@
 #include <uart.h>
 #include <LoRa_stm32.h>
 #include <spi_stm32.h>
+#include <exti.h>
 
 struct lora lora;
 uint8_t rx_buf[32];
+uint8_t rx_ready = 0;
 
 int main() {
 	uart2_init();
@@ -20,10 +22,18 @@ int main() {
 	 * Config port-pin in input mode
 	 */
 
-	for(;;) {
-		uint8_t status = new_lora(&lora);
-		if (status) printf("LoRa detected\r\n");
+	uint8_t status = new_lora(&lora);
+	if (status) {
+		printf("LoRa detected\r\n");
+		lora_set_mode(&lora, RXSINGLE);
+	}
 
+	for(;;) {
+		if (rx_ready) {
+			printf("rx_buf: %s", rx_buf);
+		}
+
+		printf("Done loop execution\r\n");
 		delay(500);
 	}
 
@@ -31,4 +41,5 @@ int main() {
 
 void lora_rx_irq(void) {
 	lora_receive(&lora, rx_buf);
+	rx_ready = 1;
 }

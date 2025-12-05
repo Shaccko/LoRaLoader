@@ -5,14 +5,25 @@
 #include <gpio_raspi.h>
 #include <spi_raspi.h>
 #include <LoRa_raspi.h>
+#include <signal.h>
 
+volatile sig_atomic_t stop = 0;
+
+void handle_sigint(int sig) {
+	(void)sig;
+	stop = 1;
+}
 
 int main() {
+	signal(SIGINT, handle_sigint); 
+
 	spidev_init();
+	gpio_alloc();
+
 	struct lora lora;
 
-	for (;;) {
-		open_spidev();
+	open_spidev();
+	while (!stop) {
 		uint8_t status = new_lora(&lora);
 		if (status) {
 			printf("LoRa detected\n");
@@ -20,7 +31,8 @@ int main() {
 		else {
 			printf("Error\n");
 		}
-		close_spidev();
+
+		usleep(500*1000);
 	}
 	
 	/*
@@ -34,5 +46,6 @@ int main() {
 	 * 	LoRa_transmit(
 	 */
 
+	close_spidev();
 	return 0;
 }
