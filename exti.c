@@ -3,6 +3,7 @@
 #include <hal.h>
 #include <exti.h>
 #include <rcc.h>
+#include <uart.h>
 
 static const uint8_t EXTI_IRQ[7] = {
 	6, 7, 8, 9, 10, /*EXTI0-4*/
@@ -42,6 +43,8 @@ void enable_line_interrupt(uint8_t line, uint8_t port, uint8_t trigger_type) {
 
 void EXTI0_IRQHandler(void) {
 	EXTI->PR = BIT(0); /* Line 0's bit PR */
+
+	printf("Here");
 
 	extern void lora_rx_irq(void);
 	lora_rx_irq();

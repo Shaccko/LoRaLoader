@@ -37,6 +37,44 @@ uint8_t new_lora(struct lora* lora) {
 	/* Initialize LoRa */
 	lora_set_mode(lora, SLEEP);
 	lora_write_reg(RegOpMode, 0x80); /* Set RegOP to LoRa mode */
+
+	/* Set frequency, output power gain, OCP, LNA gain, 
+	 * SF, CRC, timeout MSB, timeout LSB, bandwidth, coding rate, explicit mode,
+	 * preaamble, DI0 mapping then goto standby mode for further operations by user
+	 * end with a version check for validity. 
+	 */
+	
+	/* Essentially these registers below are increasing our range. */
+	/* FRF = (F_rf * 2^19)/32MHz */
+	lora_set_freq(lora->freq);
+
+	/* Power Gain */
+	lora_write_reg(RegGainConfig, lora->db_pwr);
+
+	/* OCP */
+	lora_set_ocp();
+
+	/* Set LNA Gain */
+	lora_set_lnahigh(); 
+
+	/* Set BW, CR */
+	lora_set_modemconfig1(lora->bw, lora->code_rate);
+
+	/* CF, CRC, Timeout */
+	lora_set_modemconfig2(lora->sf);
+
+	/* DIO mapping, using DIO0 */
+	uint8_t read, data;
+	lora_read_reg(RegDioMapping1, &read);
+	data = read | 0x3FU; 
+	lora_write_reg(RegDioMapping1, data); /* Setting DIO0, rest to none */
+
+	/* Set Preamble */
+	lora_write_reg(RegPreambleMsb, (uint8_t)(lora->preamb >> 8U));
+	lora_write_reg(RegPreambleLsb, (uint8_t)(lora->preamb >> 0U));
+
+	/* Registers set, STDBY for future operations, check LoRa with version read */
+	lora_set_mode(lora, STDBY);
 	uint8_t lora_version;
 	lora_read_reg(RegVersion, &lora_version);
 	
@@ -82,8 +120,8 @@ uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
 	size_t num_bytes, i;
 
 	/* Wait for Rx flag, set FiFo ptr to RxBase */
-	lora_read_reg(RegIrqFlags, &reg);
-	while ((reg & 0x40U) == 0) lora_read_reg(RegIrqFlags, &reg);
+	//lora_read_reg(RegIrqFlags, &reg);
+	//while ((reg & 0x40U) == 0) lora_read_reg(RegIrqFlags, &reg);
 	lora_read_reg(RegFifoRxCurrentAddr, &reg);
 	lora_write_reg(RegFifoAddrPtr, reg);
 	
@@ -118,9 +156,13 @@ static inline uint8_t fifo_empty(void) {
 	return OK;
 }
 
-
 void lora_set_modemconfig2(uint8_t sf) {
-	uint8_t reg_val = (uint8_t)(sf << 4U); /* Set TxCont, RxPayload on, RXTimeOut */
+	uint8_t reg_val;
+	uint8_t read;
+
+	lora_read_reg(RegModemConfig2, &read);
+	//reg_val = (read | ((uint8_t) (sf << 4U)) | 0x05U);
+	reg_val = (read | ((uint8_t) (sf << 4U)));
 	lora_write_reg(RegModemConfig2, reg_val);
 	lora_write_reg(RegSymbTimeoutLsb, 0xFFU); /* Set LSB TimeOut */
 }

@@ -71,12 +71,12 @@ uint8_t new_lora(struct lora* lora) {
 	/* DIO mapping, using DIO0 */
 	uint8_t read, data;
 	lora_read_reg(lora, RegDioMapping1, &read);
-	data = read; 
+	data = read | 0x3FU; 
 	lora_write_reg(lora, RegDioMapping1, data); /* Setting DIO0, rest to none */
 
 	/* Set Preamble */
-	lora_write_reg(lora, RegPreambleMsb, (uint8_t)(lora->preamb >> 8));
-	lora_write_reg(lora, RegPreambleLsb, (uint8_t)(lora->preamb >> 0));
+	lora_write_reg(lora, RegPreambleMsb, (uint8_t)(lora->preamb >> 8U));
+	lora_write_reg(lora, RegPreambleLsb, (uint8_t)(lora->preamb >> 0U));
 
 	/* Registers set, STDBY for future operations, check LoRa with version read */
 	lora_set_mode(lora, STDBY);
@@ -125,18 +125,18 @@ uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
 	size_t num_bytes, i;
 
 	/* Wait for Rx flag, set FiFo ptr to RxBase */
-	lora_read_reg(lora, RegIrqFlags, &reg);
-	while ((reg & 0x40U) == 0) lora_read_reg(lora, RegIrqFlags, &reg);
+	//lora_read_reg(lora, RegIrqFlags, &reg);
+	//while ((reg & 0x40U) == 0) lora_read_reg(lora, RegIrqFlags, &reg);
+	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Clear flags */
+
 	lora_read_reg(lora, RegFifoRxCurrentAddr, &reg);
 	lora_write_reg(lora, RegFifoAddrPtr, reg);
 	
 	lora_read_reg(lora, FifoRxBytesNb, (uint8_t*)&num_bytes);
 
-	/* Push bytes onto buffer */
-	lora_read_reg(lora, RegIrqFlags, &reg);
-	while ((reg & 0x40) == 0) lora_read_reg(lora, RegIrqFlags, &reg);
-	for (i = 0; i < num_bytes; i++) {
+	for (i = 0; i < 5; i++) {
 		lora_read_reg(lora, RegFifo, &buf[i]);
+		printf("buf[i]=%c\r\n",buf[i]);
 	}
 	
 	lora_write_reg(lora, RegIrqFlags, 0x40);
@@ -167,7 +167,8 @@ void lora_set_modemconfig2(struct lora* lora, uint8_t sf) {
 	uint8_t read;
 
 	lora_read_reg(lora, RegModemConfig2, &read);
-	reg_val = (read | ((uint8_t) (sf << 4U)) | 0x05U);
+	//reg_val = (read | ((uint8_t) (sf << 4U)) | 0x05U);
+	reg_val = (read | ((uint8_t) (sf << 4U)));
 	lora_write_reg(lora, RegModemConfig2, reg_val);
 	lora_write_reg(lora, RegSymbTimeoutLsb, 0xFFU); /* Set LSB TimeOut */
 }

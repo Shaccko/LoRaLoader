@@ -27,8 +27,8 @@ int main() {
 		if (rx_ready) {
 			printf("rx_buf: %s\r\n", rx_buf);
 		}
-
-		lora_transmit(&lora, (uint8_t*)"Hello", 5);
+	//	lora_transmit(&lora, (uint8_t*)"Hello", 5);
+		lora_receive(&lora, rx_buf);
 		printf("Done loop execution\r\n");
 		delay(500);
 	}
