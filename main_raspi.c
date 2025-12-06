@@ -33,7 +33,7 @@ int main() {
 
 	uint32_t counter = 0;
 	while (!stop) {
-		if (lora_transmit(&lora, (uint8_t*)"Hello", 5))
+		if (lora_transmit(&lora, (uint8_t*)"ForFuck", 7))
 			printf("Transmitted LoRa message %d\n", counter++);
 
 		usleep(500*1000);

@@ -100,6 +100,7 @@ void lora_set_ocp(struct lora* lora);
 void lora_set_freq(struct lora* lora, uint32_t freq);
 uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len);
 uint8_t lora_receive(struct lora* lora, uint8_t* buf);
+uint8_t lora_receive_gpt(struct lora* lora, uint8_t* buf);
 void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len);
 
 #endif
