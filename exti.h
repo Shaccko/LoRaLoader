@@ -26,7 +26,6 @@ struct exti {
 
 enum { FALLING, RISING };
 
-void enable_line_interrupt(uint8_t line, uint8_t port, uint8_t trigger_type);
-void EXTI0_IRQHandler(void);
+void enable_line_interrupt(uint16_t pin, uint8_t port, uint8_t trigger_type);
 
 #endif

@@ -22,13 +22,12 @@ int main() {
 		printf("LoRa detected\r\n");
 	}
 	
-	lora_set_mode(&lora, RXSINGLE);
+	lora_set_mode(&lora, RXCONT);
 	for(;;) {
 		if (rx_ready) {
 			printf("rx_buf: %s\r\n", rx_buf);
 		}
 	//	lora_transmit(&lora, (uint8_t*)"Hello", 5);
-		lora_receive_gpt(&lora, rx_buf);
 		printf("Done loop execution\r\n");
 		delay(500);
 	}
@@ -37,5 +36,6 @@ int main() {
 
 void lora_rx_irq(void) {
 	lora_receive(&lora, rx_buf);
+	printf("In lora_rx\r\n");
 	rx_ready = 1;
 }

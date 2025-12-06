@@ -21,7 +21,8 @@ uint8_t new_lora(struct lora* lora) {
 
 	gpio_set_mode(CS_PIN|RST_PIN, GPIO_MODE_OUTPUT, LORA_PORT);
 	gpio_set_mode(IRQ_PIN, GPIO_MODE_INPUT, LORA_PORT);
-	enable_line_interrupt(0, LORA_PORT, RISING);  /* Set EXTI0, on port B */
+	gpio_set_pupdr(IRQ_PIN, PULL_DOWN, LORA_PORT);
+	enable_line_interrupt(IRQ_PIN, LORA_PORT, RISING); 
 	/* Set CS pin */ 
 	gpio_write_pin(LORA_PORT, CS_PIN|RST_PIN, GPIO_PIN_SET); 
 
@@ -108,12 +109,10 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 	lora_read_reg(lora, RegIrqFlags, &reg);
 	while ((reg & 0x08U) == 0){
 		lora_read_reg(lora, RegIrqFlags, &reg);
-		delay(20); /* Incredibly important delay, crosstalk potential which can cause other pins to toggle (user LED) */
+		delay(10); /* Incredibly important delay, crosstalk potential which can cause other pins to toggle (user LED) */
 	}
 	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Write 1 to clear flag */
 	lora_set_mode(lora, lora_mode);
-
-
 
 	return OK;
 }
@@ -132,13 +131,14 @@ uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
 	/* Set FiFo */
 	lora_read_reg(lora, RegFifoRxCurrentAddr, &addr);
 	lora_write_reg(lora, RegFifoAddrPtr, addr);
-	lora_read_reg(lora, FifoRxBytesNb, &num_bytes);
+	lora_read_reg(lora, FifoRxBytesNb, (uint8_t*)&num_bytes);
 
 	/* Read from FiFo, each consecutive read moves the FiFo
 	 * address ptr up.
 	 */
 	for (uint8_t i = 0; i < num_bytes; i++) {
 		lora_read_reg(lora, RegFifo, &buf[i]);
+		printf("%c\r\n",buf[i]);
 	}
 
 	lora_write_reg(lora, RegIrqFlags, 0x40U);

@@ -38,6 +38,7 @@ struct gpio {
 
 enum { GPIO_MODE_INPUT, GPIO_MODE_OUTPUT, GPIO_MODE_AF, GPIO_MODE_ANALOG };
 enum { LOW_SPEED, MED_SPEED, FAST_SPEED, HIGH_SPEED };
+enum { NONE, PULL_UP, PULL_DOWN };
 
 static inline void gpio_set_mode(uint32_t pin, uint8_t MODE, uint8_t port) {
 	struct gpio *gpio = GPIO(BANK(port));
@@ -123,6 +124,25 @@ static inline void gpio_set_af(uint32_t pin, uint8_t af_num, uint8_t port) {
 		pin_pos++;
 	}
 }
+
+
+static inline void gpio_set_pupdr(uint32_t pin, uint8_t pupd, uint8_t port) {
+	struct gpio *gpio = GPIO(BANK(port));
+	uint32_t pin_pos = 0x00U;
+	uint32_t bit_pos;
+
+	while ((pin >> pin_pos) != 0x00U) {
+		bit_pos = 0x01U << pin_pos;
+		uint32_t curr_pin = pin & bit_pos;
+
+		if (curr_pin) {
+			gpio->PUPDR &= ~(2U << (pin_pos * 2U));
+			gpio->PUPDR |= (uint32_t) (pupd << (pin_pos * 2U));
+		}
+		pin_pos++;
+	}
+}
+
 
 static inline void disable_irq(void) {
 	__asm volatile ("cpsid i" : : : "memory");

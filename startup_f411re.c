@@ -14,9 +14,11 @@ __attribute__((naked, noreturn)) void _reset(void) {
 
 extern void _estack(void);
 extern void SysTick_Handler(void);
-extern void EXTI0_IRQHandler(void);
+extern void EXTI3_IRQHandler(void);
 
 __attribute__((section(".vectors"))) void (*const tab[16 + 91])(void) = {
 	_estack, _reset, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SysTick_Handler,
-	0, 0, 0, 0, 0, 0, EXTI0_IRQHandler};
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, EXTI3_IRQHandler
+};
 
