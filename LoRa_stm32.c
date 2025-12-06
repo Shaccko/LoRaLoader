@@ -106,11 +106,11 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 	lora_set_mode(lora, TX); /* Write to FiFo and Transmit */
 
 	/* Check and clear Tx flag */
-	lora_read_reg(lora, RegIrqFlags, &reg);
-	while ((reg & 0x08U) == 0){
+	do {
 		lora_read_reg(lora, RegIrqFlags, &reg);
-		delay(10); /* Incredibly important delay, crosstalk potential which can cause other pins to toggle (user LED) */
-	}
+		delay(10); /* Crosstalk delay */
+	} while ((reg  & 0x08U) == 0);
+
 	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Write 1 to clear flag */
 	lora_set_mode(lora, lora_mode);
 
@@ -119,26 +119,22 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 
 uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
 	uint8_t irq, addr;
-	size_t num_bytes;
+	uint8_t num_bytes;
+
 
 	/* Clear rx flag */
 	lora_write_reg(lora, RegIrqFlags, 0x40U);
-	do {
-		lora_read_reg(lora, RegIrqFlags, &irq);
-		delay(10); /* Crosstalk delay */
-	} while ((irq & 0x40U) == 0U);
 
 	/* Set FiFo */
 	lora_read_reg(lora, RegFifoRxCurrentAddr, &addr);
 	lora_write_reg(lora, RegFifoAddrPtr, addr);
-	lora_read_reg(lora, FifoRxBytesNb, (uint8_t*)&num_bytes);
+	lora_read_reg(lora, FifoRxBytesNb, &num_bytes);
 
 	/* Read from FiFo, each consecutive read moves the FiFo
 	 * address ptr up.
 	 */
 	for (uint8_t i = 0; i < num_bytes; i++) {
 		lora_read_reg(lora, RegFifo, &buf[i]);
-		printf("%c\r\n",buf[i]);
 	}
 
 	lora_write_reg(lora, RegIrqFlags, 0x40U);
