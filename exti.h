@@ -8,7 +8,7 @@
 /* To config EXTI */
 #define SYSCFG ((struct syscfg*) (0x40013800))
 #define EXTI ((struct exti*) (0x40013C00))
-#define NVIC_ISER(x) ((volatile uint32_t*) 0xE000E100 + 0x1 * (x))
+#define NVIC ((volatile uint32_t*)0xE000E100)
 
 
 struct scb {
@@ -18,6 +18,10 @@ struct scb {
 
 struct syscfg {
 	volatile uint32_t MEMRMP, PMC, EXTICR[4], CMPCR;
+};
+
+struct exti {
+	volatile uint32_t IMR, EMR, RTSR, FTSR, SWIER, PR;
 };
 
 enum { FALLING, RISING };

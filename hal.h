@@ -36,10 +36,6 @@ struct gpio {
 		 AFR[2];
 };
 
-struct exti {
-	volatile uint32_t IMR, EMR, RTSR, FTSR, SWIER, PR;
-};
-
 enum { GPIO_MODE_INPUT, GPIO_MODE_OUTPUT, GPIO_MODE_AF, GPIO_MODE_ANALOG };
 enum { LOW_SPEED, MED_SPEED, FAST_SPEED, HIGH_SPEED };
 
