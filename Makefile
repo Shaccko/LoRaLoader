@@ -16,13 +16,16 @@ FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c syscalls.c spi_stm
 FIRMWARE_HEADER = rcc.h hal.h uart.h spi_stm32.h LoRa_stm32.h exti.h
 FIRMWARE_ADDR = 0x08004000
 
+FIRMWARE_OTA_SOURCES = stm32_new_main.c rcc.c startup_f411re.c uart.c 
+FIRMWARE_OTA_HEADER = rcc.h hal.h uart.h 
+
 RASPI_SOURCES = main_raspi.c gpio_raspi.c LoRa_raspi.c spi_raspi.c
 RASPI_HEADERS = gpio_raspi.h LoRa_raspi.h spi_raspi.h
 
 ifeq ($(OS),WINDOWS_NT)
 	RM = cmd /C del /Q /F *.elf *~ *.o *.bin ota_upload_raspi
 else
-	RM = rm -f *.bin *.elf *.o ota_upload_raspi
+	RM = rm -f *.bin *.elf *.o ota_upload_raspi *.map
 endif
 
 build: firmware.elf bootloader.elf firmware.bin bootloader.bin ota_upload_raspi
@@ -36,6 +39,9 @@ flash: firmware.bin
 flash-all: bootloader.bin firmware.bin
 	st-flash --reset write firmware.bin $(FIRMWARE_ADDR) 
 	st-flash write bootloader.bin $(BOOTLOADER_ADDR)
+
+firmware_new.bin: firmware_new.elf
+	arm-none-eabi-objcopy -O binary $< $@
 
 firmware.bin: firmware.elf
 	arm-none-eabi-objcopy -O binary $< $@
