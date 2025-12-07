@@ -19,6 +19,11 @@ FIRMWARE_ADDR = 0x08004000
 RASPI_SOURCES = main_raspi.c gpio_raspi.c LoRa_raspi.c spi_raspi.c
 RASPI_HEADERS = gpio_raspi.h LoRa_raspi.h spi_raspi.h
 
+ifeq ($(OS),WINDOWS_NT)
+	RM = cmd /C del /Q /F *.elf *~ *.o *.bin ota_upload_raspi
+else
+	RM = rm -f *.bin *.elf *.o ota_upload_raspi
+endif
 
 build: firmware.elf bootloader.elf firmware.bin bootloader.bin ota_upload_raspi
 
@@ -45,4 +50,4 @@ bootloader.elf: $(BOOTLOADER_SOURCES) $(BOOTLOADER_HEADER)
 	arm-none-eabi-gcc $(BOOTLOADER_SOURCES) $(ARMCFLAGS) -T $(BOOTLOADER_LD) $(LDFLAGS) -o $@
 
 clean:
-	rm -f *.o *.elf *.bin *.map spi_raspi
+	$(RM)
