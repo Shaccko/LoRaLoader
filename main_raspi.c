@@ -1,25 +1,26 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <gpio_raspi.h>
 #include <spi_raspi.h>
 #include <LoRa_raspi.h>
 #include <signal.h>
 
+#define CHUNK_SIZE 64 
+
 volatile sig_atomic_t stop = 0;
 
-void handle_sigint(int sig) {
-	(void)sig;
-	stop = 1;
-}
+static void generate_packet(uint8_t* buf, size_t len);
+void handle_sigint(int sigint);
 
 /* Program execution:
- * Send half of bin file, rx stores into SRAM.
+ * Send half of bin file, 
  * Perform packet validation on chunks received,
  * if invalid, send a BAD_PACKET message to Tx, 
- * download restarts, or exists. If successful, continue
- * transferring other half, validate last half, repeat 
+ * download restarts, or exists. If successful, store in sram, 
+ * continue transferring other half, validate last half, repeat 
  * previous operation.
  *
  * After a successful transfer, give user option to restart 
@@ -46,14 +47,18 @@ int main() {
 	}
 
 	/* Read total file size */
-	uint8_t buf[255];
+	uint8_t buf[CHUNK_SIZE];
 	size_t bytes_read;
 
-	uint32_t sum = 0;
-	uint8_t counter = 0;
-	while ((bytes_read = fread(buf, 1, 255, fp)) > 0) {
-		counter++;
+	uint32_t total = 0, counter = 0;
+	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
+		generate_packet(buf, bytes_read);
+		lora_transmit(&lora, buf, bytes_read + 2);
+		
+		printf("%d\n",buf[0]);
+		usleep(5*1000);
 	}
+	lora_transmit(&lora, (uint8_t*)"DONE", 4);
 
 
 	//uint32_t counter = 0;
@@ -78,3 +83,22 @@ int main() {
 	close_spidev();
 	return 0;
 }
+
+void handle_sigint(int sig) {
+	(void)sig;
+	stop = 1;
+}
+
+static void generate_packet(uint8_t* buf, size_t len) {
+	size_t i;
+	uint8_t checksum = 0;
+
+	/* Checksum buffer contents */
+	for (i = 0; i < len; i++) 
+		checksum ^= buf[i];
+	memmove(&buf[1], &buf[0], len);
+
+	/* Put len [0], checksum [len - 1] */
+	buf[0] = (uint8_t)len;
+	buf[len + 1] = checksum;
+}	

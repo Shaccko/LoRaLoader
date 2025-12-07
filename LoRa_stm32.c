@@ -118,7 +118,7 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 }
 
 uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
-	uint8_t irq, addr;
+	uint8_t addr;
 	uint8_t num_bytes;
 
 

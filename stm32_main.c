@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <rcc.h>
 #include <hal.h>
@@ -9,7 +10,7 @@
 #include <exti.h>
 
 struct lora lora;
-uint8_t rx_buf[32];
+uint8_t rx_buf[66];
 uint8_t rx_ready = 0;
 
 int main() {
@@ -23,15 +24,18 @@ int main() {
 	}
 	
 	lora_set_mode(&lora, RXCONT);
+	uint32_t bytes_sum = 0;
 	for(;;) {
 		if (rx_ready) {
-			printf("rx_buf: %s\r\n", rx_buf);
+			if (strcmp((char*) rx_buf, "DONE")) {
+				printf("bytes_sum = %d\r\n", bytes_sum);
+			}
+			else {
+				bytes_sum = bytes_sum + rx_buf[0];	
+			}
+
 			rx_ready = 0;
 		}
-
-	//	lora_transmit(&lora, (uint8_t*)"Hello", 5);
-		printf("Done loop execution\r\n");
-		delay(500);
 	}
 
 }
