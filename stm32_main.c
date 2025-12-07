@@ -24,18 +24,13 @@ int main() {
 	}
 	
 	lora_set_mode(&lora, RXCONT);
-	uint32_t bytes_sum = 0;
+	uint32_t total = 0;
 	for(;;) {
 		if (rx_ready) {
-			if (strcmp((char*) rx_buf, "DONE")) {
-				printf("bytes_sum = %d\r\n", bytes_sum);
-			}
-			else {
-				bytes_sum = bytes_sum + rx_buf[0];	
-			}
-
+			total += *rx_buf;
 			rx_ready = 0;
 		}
+		printf("total :%d\r\n", total);
 	}
 
 }

@@ -50,15 +50,13 @@ int main() {
 	uint8_t buf[CHUNK_SIZE];
 	size_t bytes_read;
 
-	uint32_t total = 0, counter = 0;
+	uint32_t total = 0; 
+	uint8_t counter[2]; 
 	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
-		generate_packet(buf, bytes_read);
-		lora_transmit(&lora, buf, bytes_read + 2);
-		
-		printf("%d\n",buf[0]);
-		usleep(5*1000);
+		lora_transmit(&lora, (uint8_t*)&bytes_read, 1);
+		total += bytes_read;
 	}
-	lora_transmit(&lora, (uint8_t*)"DONE", 4);
+	printf("Total bytes on raspi: %d\n", total);
 
 
 	//uint32_t counter = 0;
