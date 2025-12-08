@@ -111,32 +111,29 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 	return OK;
 }
 
-uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
-	if (!fifo_empty()) return FAIL;
+uint8_t lora_receive(uint8_t* buf) {
+	uint8_t addr;
+	uint8_t num_bytes;
 
-	lora_set_mode(lora, STDBY);
-	
-	uint8_t reg;
-	size_t num_bytes, i;
 
-	/* Wait for Rx flag, set FiFo ptr to RxBase */
-	//lora_read_reg(RegIrqFlags, &reg);
-	//while ((reg & 0x40U) == 0) lora_read_reg(RegIrqFlags, &reg);
-	lora_read_reg(RegFifoRxCurrentAddr, &reg);
-	lora_write_reg(RegFifoAddrPtr, reg);
-	
-	lora_read_reg(FifoRxBytesNb, (uint8_t*)&num_bytes);
+	/* Clear rx flag */
+	lora_write_reg(RegIrqFlags, 0x40U);
 
-	/* Push bytes onto buffer */
-	lora_read_reg(RegIrqFlags, &reg);
-	while ((reg & 0x40) == 0) lora_read_reg(RegIrqFlags, &reg);
-	for (i = 0; i < num_bytes; i++) {
+	/* Set FiFo */
+	lora_read_reg(RegFifoRxCurrentAddr, &addr);
+	lora_write_reg(RegFifoAddrPtr, addr);
+	lora_read_reg(FifoRxBytesNb, &num_bytes);
+
+	/* Read from FiFo, each consecutive read moves the FiFo
+	 * address ptr up.
+	 */
+	for (uint8_t i = 0; i < num_bytes; i++) {
 		lora_read_reg(RegFifo, &buf[i]);
 	}
-	
-	lora_write_reg(RegIrqFlags, 0x40);
-	
-	return OK;
+
+	lora_write_reg(RegIrqFlags, 0x40U);
+
+	return num_bytes;
 }
 
 

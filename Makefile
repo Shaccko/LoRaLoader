@@ -12,8 +12,10 @@ BOOTLOADER_HEADER = rcc.h hal.h uart.h
 BOOTLOADER_ADDR = 0x08000000
 
 FIRMWARE_LD ?= f411re.ld
-FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c syscalls.c spi_stm32.c LoRa_stm32.c exti.c
-FIRMWARE_HEADER = rcc.h hal.h uart.h spi_stm32.h LoRa_stm32.h exti.h
+FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c \
+		   syscalls.c spi_stm32.c LoRa_stm32.c exti.c
+FIRMWARE_HEADER = rcc.h hal.h uart.h spi_stm32.h LoRa_stm32.h \
+		  exti.h packet_parser.h
 FIRMWARE_ADDR = 0x08004000
 
 FIRMWARE_OTA_SOURCES = stm32_new_main.c rcc.c startup_f411re.c uart.c 

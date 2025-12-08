@@ -139,7 +139,7 @@ uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
 
 	lora_write_reg(lora, RegIrqFlags, 0x40U);
 
-	return OK;
+	return num_bytes;
 }
 
 static inline uint8_t fifo_empty(struct lora* lora) {
