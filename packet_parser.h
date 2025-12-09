@@ -1,29 +1,45 @@
 #include <stdint.h>
 
 #define CHUNK_SIZE 200
-#define ACK_CODE 0xCF
-#define PACKET_FAIL_CODE 0xF
+#define SYNC_BYTE 0xAD
+#define PKT_PASS 0xCF
+#define PKT_FAIL 0xF
 
-static inline void process_firmware_packet(uint8_t* firmware_info, uint8_t* rx_buf) {
-	/* firmware_info[0] holds checksum, [1] holds total
-	 * chunks transmitted 
-	 */
+struct ota_pkt {
+	uint8_t chunk_size, chunk_num, chunk_data[CHUNK_SIZE];
+};
+
+static inline uint8_t validate_packet_checksum(uint8_t* buf, size_t buf_size, uint8_t pkt_checksum) {
+	uint8_t checksum = 0;
+
 	size_t i;
-	for (i = 0; i < CHUNK_SIZE; i++) {
-		firmware_info[0] ^= rx_buf[i];
+	for (i = 0; i < buf_size; i++) {
+		checksum ^= buf[i];	
 	}
-	firmware_info[1]++;
+	if (checksum != pkt_checksum) return 0;
+
+	return 1;
 }
 
-static inline uint8_t validate_packets_received(uint8_t* firmware_info, uint8_t* rx_buf) {
-	uint8_t tx_checksum = rx_buf[0];
-	uint8_t tx_total_chunks = rx_buf[1];
+static inline uint8_t validate_packets_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
+	/* [0] = header
+	 * [1] = chunk_size
+	 * [2] = chunk_num
+	 * [3] = data[CHUNK_SIZE]
+	 * [4] = checksum
+	 */
 
-	printf("%x, %d\r\n", firmware_info[0], firmware_info[1]);
-	if (firmware_info[0] == tx_checksum && 
-	    firmware_info[1] == tx_total_chunks) {
-		return ACK_CODE;
-	}
+	static uint8_t chunk_num = 1;
 
-	return PACKET_FAIL_CODE;
+	if (rx_pkt[0] != SYNC_BYTE || rx_pkt[1] > 200 
+			|| rx_pkt[2] != chunk_num) return PKT_FAIL;
+	if (validate_packet_checksum(&rx_pkt[3], (size_t)rx_pkt[1],  rx_pkt[4]) != 1) return PKT_FAIL;
+	
+	out_pkt->chunk_size = rx_pkt[1];
+	out_pkt->chunk_num = chunk_num++;
+	memcpy(out_pkt->chunk_data, &rx_pkt[3], rx_pkt[1]);
+
+	printf("pass\r\n");
+
+	return PKT_PASS;
 }

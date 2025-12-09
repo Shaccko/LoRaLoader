@@ -51,6 +51,8 @@ int spidev_transmit_receive(uint8_t* mosi_buf, uint8_t* miso_buf,  size_t mosi_l
 		.cs_change = 0,
 
 		.bits_per_word = 8,
+		.delay_usecs = 2,
+		.word_delay_usecs = 2
 	};
 
 	if (ioctl(fd_spi, SPI_IOC_MESSAGE(1), &packet) < 0) {
