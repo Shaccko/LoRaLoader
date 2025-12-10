@@ -39,28 +39,6 @@ uint8_t new_lora(struct lora* lora) {
 	lora->db_pwr = POWER_20dB;
 	lora->curr_mode = STDBY;
 
-	uint8_t irq;
-	printf("Before setting params:\r\n");
-	printf("RxFifo initial addresses:\r\n");
-	lora_read_reg(lora, RegFifoAddrPtr, &irq);
-	printf("FifoAddrPtr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoRxBaseAddr, &irq);
-	printf("RxBaseAddr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoRxCurrentAddr, &irq);
-	printf("RxCurrAddr: %x\r\n", irq);
-	lora_read_reg(lora, FifoRxBytesNb, &irq);
-	printf("RxBytesNb: %x\r\n", irq);
-
-	printf("TxFifo initial addresses:\r\n");
-	lora_read_reg(lora, RegFifoAddrPtr, &irq);
-	printf("FifoAddrPtr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoTxBaseAddr, &irq);
-	printf("TxBaseAddr: %x\r\n", irq);
-	lora_read_reg(lora, FifoPayloadLength, &irq);
-	printf("PayloadLengthTx: %x\r\n", irq);
-
-
-	
 	/* Initialize lora */
 	lora_set_mode(lora, SLEEP);
 	lora_write_reg(lora, RegOpMode, 0x80); /* Set RegOP to lora mode */
@@ -106,52 +84,14 @@ uint8_t new_lora(struct lora* lora) {
 
 	lora_read_reg(lora, RegVersion, &lora_version);
 
-	printf("After setting params:\r\n");
-	printf("RxFifo initial addresses:\r\n");
-	lora_read_reg(lora, RegFifoAddrPtr, &irq);
-	printf("FifoAddrPtr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoRxBaseAddr, &irq);
-	printf("RxBaseAddr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoRxCurrentAddr, &irq);
-	printf("RxCurrAddr: %x\r\n", irq);
-	lora_read_reg(lora, FifoRxBytesNb, &irq);
-	printf("RxBytesNb: %x\r\n", irq);
-
-	printf("TxFifo initial addresses:\r\n");
-	lora_read_reg(lora, RegFifoAddrPtr, &irq);
-	printf("FifoAddrPtr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoTxBaseAddr, &irq);
-	printf("TxBaseAddr: %x\r\n", irq);
-	lora_read_reg(lora, FifoPayloadLength, &irq);
-	printf("PayloadLengthTx: %x\r\n", irq);
-	
 	/* We expect it to return 0x12, according to register datasheet */
 	return lora_version == 0x12 ? OK : FAIL;
 }
 
 uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 
-	uint8_t reg, irq;
+	uint8_t reg;
 	uint8_t lora_mode = lora->curr_mode;
-
-	printf("On fresh transmit:\n");
-	printf("RxFifo initial addresses:\r\n");
-	lora_read_reg(lora, RegFifoAddrPtr, &irq);
-	printf("FifoAddrPtr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoRxBaseAddr, &irq);
-	printf("RxBaseAddr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoRxCurrentAddr, &irq);
-	printf("RxCurrAddr: %x\r\n", irq);
-	lora_read_reg(lora, FifoRxBytesNb, &irq);
-	printf("RxBytesNb: %x\r\n", irq);
-
-	printf("TxFifo initial addresses:\r\n");
-	lora_read_reg(lora, RegFifoAddrPtr, &irq);
-	printf("FifoAddrPtr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoTxBaseAddr, &irq);
-	printf("TxBaseAddr: %x\r\n", irq);
-	lora_read_reg(lora, FifoPayloadLength, &irq);
-	printf("PayloadLengthTx: %x\r\n\r\n\r\n", irq);
 
 	lora_set_mode(lora, STDBY);
 	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Pre-clear all flags */
@@ -161,50 +101,18 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 	lora_write_reg(lora, RegFifoAddrPtr, reg);
 	lora_write_reg(lora, FifoPayloadLength, (uint8_t)msg_len);
 
-	printf("Set addresses:\r\n");
-	lora_read_reg(lora, RegFifoAddrPtr, &irq);
-	printf("FifoAddrPtr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoTxBaseAddr, &irq);
-	printf("TxBaseAddr: %x\r\n", irq);
-	lora_read_reg(lora, FifoPayloadLength, &irq);
-	printf("PayloadLengthTx: %x\r\n\n\n", irq);
-
 	lora_burstwrite(lora, msg, msg_len); 
 	lora_set_mode(lora, TX); /* Write to FiFo and Transmit */
 
 	/* Check and clear Tx flag */
-	do {
-		lora_read_reg(lora, RegIrqFlags, &reg);
-		delay(10); /* Crosstalk delay */
-	} while ((reg  & 0x08U) == 0);
-
 	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Write 1 to clear flag */
 	lora_set_mode(lora, lora_mode);
-
-	printf("On end transmit:\n");
-	printf("RxFifo addresses:\r\n");
-	lora_read_reg(lora, RegFifoAddrPtr, &irq);
-	printf("FifoAddrPtr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoRxBaseAddr, &irq);
-	printf("RxBaseAddr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoRxCurrentAddr, &irq);
-	printf("RxCurrAddr: %x\r\n", irq);
-	lora_read_reg(lora, FifoRxBytesNb, &irq);
-	printf("RxBytesNb: %x\r\n", irq);
-
-	printf("TxFifo addresses:\r\n");
-	lora_read_reg(lora, RegFifoAddrPtr, &irq);
-	printf("FifoAddrPtr: %x\r\n", irq);
-	lora_read_reg(lora, RegFifoTxBaseAddr, &irq);
-	printf("TxBaseAddr: %x\r\n", irq);
-	lora_read_reg(lora, FifoPayloadLength, &irq);
-	printf("PayloadLengthTx: %x\r\n\n\n\n", irq);
 
 	return OK;
 }
 
 uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
-	uint8_t addr, irq;
+	uint8_t addr;
 	uint8_t num_bytes;
 
 	lora_set_mode(lora, STDBY);
@@ -301,7 +209,11 @@ void lora_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
 }
 
 void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
-	if (payload_len > 33) return;
+	/* This line will be kept as memorabilia, as it alone
+	 * was the cause of a day of debugging why my payloads
+	 * were not being received properly. 
+	 */
+	/* if (payload_len > 33) return; */
 
 	uint8_t reg[32];
 	size_t reg_len = payload_len + 1;
