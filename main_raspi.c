@@ -2,35 +2,19 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 
 #include <gpio_raspi.h>
 #include <spi_raspi.h>
 #include <lora_raspi.h>
-#include <signal.h>
-
-#define ACK_CODE 0xAC
-#define OTA_BYTE 0xBC
-#define OTA_TX_START 0xCC
-#define OTA_TX_STOP 0xDC
-#define PKT_PASS 0xEC
-
-#define CHUNK_SIZE 200
+#include <packet_transmitter.h>
 
 volatile sig_atomic_t stop = 0;
-struct packet {
-	uint8_t header;
-	uint8_t chunk_size;
-	uint8_t chunk_num;
-	uint8_t checksum;
-	uint8_t data[CHUNK_SIZE];
-};
 
 struct lora lora;
 uint8_t rx_buf;
 
-void handle_sigint(int sigint);
-static void exit_app(void);
-static uint8_t wait_ack(void);
+static void handle_sigint(int sigint);
 
 int main() {
 	signal(SIGINT, handle_sigint); 
@@ -57,53 +41,40 @@ int main() {
 
 	/* Our chunk data */
 	uint32_t total = 0;
-	uint8_t chunks_sent = 1;
 
 	/* Send TX_START ACK */
 	printf("Sending OTA code\n");
 	uint8_t tmp = OTA_TX_START;
-	lora_transmit(&lora, &tmp, 1);
-	if (wait_ack() != 1) {
-		tmp = OTA_TX_STOP;	
-		lora_transmit(&lora, &tmp, 1);
-
-		perror("Failed ack, exiting...\n");
+	if (send_tx_wait_ack(&lora, &tmp, 1) != 1) {
+		printf("Error in tx, exiting...\n");
 		return 0;
 	}
 
-	size_t bytes_read, i;
+	size_t bytes_read;
 	printf("Starting OTA transfer\n");
 	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
-		if (stop) exit_app();
-		
-		pkt.header = OTA_BYTE;
-		pkt.chunk_size = (uint8_t)bytes_read;
-		pkt.chunk_num = chunks_sent++;
-		memcpy(pkt.data, buf, bytes_read);
-		pkt.checksum = 0;
-		for (i = 0; i < bytes_read; i++) {
-			pkt.checksum ^= buf[i];
+		if (stop) {
+			fclose(fp);
+			close_spidev();
+			return 0;
 		}
 
-		lora_transmit(&lora, (uint8_t*)&pkt, bytes_read + 4);
-		printf("Sent transmission\n");
-
-		/* Wait for ACK from rx */
-		printf("Waiting for ack...\n");
-		if (wait_ack() != 1) {
-			tmp = OTA_TX_STOP;	
-			lora_transmit(&lora, &tmp, 1);
-
-			perror("Failed ack, exiting...\n");
-			return -1;
+		/* Store files position incase of an ack error */
+		long int old_file_pos = ftell(fp);
+		generate_firmware_packet(&pkt, buf, bytes_read);
+		if (send_tx_wait_ack(&lora, (uint8_t*)&pkt, bytes_read + 4) != 1) {
+			printf("Failed packet transmission, exiting...\n");
+			fseek(fp, old_file_pos, SEEK_SET);
 		}
-		printf("ACK received, next chunk...\n");
-		total = total + bytes_read;
-
+		else {
+			printf("ACK received, next chunk...\n");
+			total = total + bytes_read;
+			increment_chunk_num();
+		}
 		usleep(1);
 	}
 	printf("File transfer complete, confirming checksum/size...\n");
-	tmp = OTA_TX_STOP;	
+	tmp = PKT_COMPLETE;
 	lora_transmit(&lora, &tmp, 1);
 	
 	/* Wait for final ack */
@@ -116,26 +87,9 @@ int main() {
 	return 0;
 }
 
-void handle_sigint(int sig) {
+static void handle_sigint(int sig) {
 	(void)sig;
 	stop = 1;
 }
 
-static inline uint8_t wait_ack(void) {
-	uint8_t irq;
 
-	do {
-		lora_read_reg(RegIrqFlags, &irq);
-	} while ((irq & 0x40U) == 0);
-	lora_receive(&lora, &rx_buf);
-
-	if (rx_buf == ACK_CODE || rx_buf == PKT_PASS) {
-		return 1;
-	}
-
-	return 0;
-}
-
-static void exit_app(void) {
-	close_spidev();
-}

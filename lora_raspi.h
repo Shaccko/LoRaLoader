@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <hal.h>
 
 /* FiFo buffer and OP modes */
 #define RegFifo 0x00
@@ -80,6 +79,9 @@
 /* T/F Macros */
 #define OK 1
 #define FAIL 0
+
+/* Helper */
+#define PIN_NUM(x) (1U << (x))
 
 enum { SLEEP, STDBY, FSTX, TX, FSRX, RXCONT, RXSINGLE, CAD };
 

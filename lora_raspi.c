@@ -88,7 +88,6 @@ uint8_t new_lora(struct lora* lora) {
 }
 
 uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
-
 	uint8_t reg;
 	uint8_t lora_mode = lora->curr_mode;
 
