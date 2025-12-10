@@ -64,6 +64,9 @@ int main() {
 	uint8_t tmp = OTA_TX_START;
 	lora_transmit(&lora, &tmp, 1);
 	if (wait_ack() != 1) {
+		tmp = OTA_TX_STOP;	
+		lora_transmit(&lora, &tmp, 1);
+
 		perror("Failed ack, exiting...\n");
 		return 0;
 	}
@@ -88,6 +91,9 @@ int main() {
 		/* Wait for ACK from rx */
 		printf("Waiting for ack...\n");
 		if (wait_ack() != 1) {
+			tmp = OTA_TX_STOP;	
+			lora_transmit(&lora, &tmp, 1);
+
 			perror("Failed ack, exiting...\n");
 			return -1;
 		}
@@ -97,7 +103,8 @@ int main() {
 		usleep(1);
 	}
 	printf("File transfer complete, confirming checksum/size...\n");
-	//lora_transmit(&lora, firmware_validate, 2);
+	tmp = OTA_TX_STOP;	
+	lora_transmit(&lora, &tmp, 1);
 	
 	/* Wait for final ack */
 	lora_set_mode(&lora, SLEEP); /* Finished lora operations. */
@@ -119,7 +126,6 @@ static inline uint8_t wait_ack(void) {
 
 	do {
 		lora_read_reg(RegIrqFlags, &irq);
-		usleep(5);
 	} while ((irq & 0x40U) == 0);
 	lora_receive(&lora, &rx_buf);
 

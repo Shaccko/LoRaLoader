@@ -8,6 +8,7 @@
 #define OTA_TX_STOP 0xDC
 #define PKT_PASS 0xEC
 #define PKT_FAIL 0xF7
+#define PKT_COMPLETE 0xAA
 
 struct ota_pkt {
 	uint8_t chunk_size, chunk_num, chunk_data[CHUNK_SIZE];
@@ -35,6 +36,11 @@ static inline uint8_t validate_packets_received(uint8_t* rx_pkt, struct ota_pkt*
 	 */
 
 	static uint8_t chunk_num = 1;
+
+	if (rx_pkt[0] == OTA_TX_STOP) {
+		chunk_num = 1;
+		return PKT_COMPLETE;
+	}
 
 	if (rx_pkt[0] != OTA_BYTE || rx_pkt[1] > 200 
 			|| rx_pkt[2] != chunk_num) {
