@@ -9,6 +9,11 @@
 #define KEY1 0x45670123
 #define KEY2 0xCDEF89AB
 
+#define CHUNK_SIZE 200
+
+__attribute__((section(".ota_chunk")))
+static uint8_t ota_chunk_buf[CHUNK_SIZE];
+
 struct flash {
 	volatile uint32_t ACR, KEYR, OPTKEYR, SR, CR, OPTCR
 };
@@ -57,6 +62,8 @@ static void clear_flash_sectors(uint8_t sectors) {
 	while (flash->SR & BIT(16));
 	lock_flash();
 }
+
+static void 
 
 static void write_flash_sectors(uint8_t sectors) {
 	struct flash* flash = FLASH;
