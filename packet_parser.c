@@ -29,16 +29,20 @@ uint8_t validate_packets_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
 
 	static uint8_t chunk_num = 1;
 
-	switch (rx_pkt[0] & 0xDC) {
+	switch (rx_pkt[0] & 0xFF) {
 		case (PKT_COMPLETE):
+			printf("case pkt_complete\r\n");
 			ota_tx_rdy = 0;
 			chunk_num = 1;
 			return PKT_COMPLETE;
 		case (OTA_TX_START):
+			printf("case pkt_start\r\n");
 			ota_tx_rdy = 1;
 			chunk_num = 1;
 			return ACK_CODE;
 		case (OTA_BYTE):
+			printf("case ota_byte\r\n");
+			printf("rx_pkt[1]: %d, rx_pkt[2]: %d\r\n", rx_pkt[1], rx_pkt[2]);
 			if ((rx_pkt[1] > 200) || rx_pkt[2] != chunk_num) {
 				printf("Failed check 1\r\n");
 				return PKT_FAIL;

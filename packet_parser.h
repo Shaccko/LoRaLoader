@@ -12,6 +12,7 @@
 #define PKT_FAIL 0xF7
 #define PKT_COMPLETE 0xAA
 
+
 struct ota_pkt {
 	uint8_t chunk_size, chunk_num, chunk_data[CHUNK_SIZE];
 };

@@ -14,6 +14,7 @@
 #define PKT_COMPLETE 0xAA
 #define OTA_ERR 0xFF
 
+#define PACKET_TIMEOUT 1500
 #define CHUNK_SIZE 200
 
 struct packet {

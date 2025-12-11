@@ -7,7 +7,7 @@
 #include <lora_raspi.h>
 #include <packet_transmitter.h>
 
-static uint8_t chunk_num = 0;
+static uint8_t chunk_num = 1;
 
 static inline uint8_t get_chunk_num(void) {
 	return chunk_num;
@@ -37,9 +37,10 @@ uint8_t send_tx_wait_ack(struct lora* lora, uint8_t* tx, size_t tx_len) {
 	uint8_t irq, err_count = 0, ack_status = 0;
 	uint8_t rx_buf;
 
-	long int ack_timer = get_tick();
+	long int ack_timer;
 	while (ack_status != 1) {
-		if (err_count == 3) {
+		ack_timer = get_tick();
+		if (err_count >= 5) {
 			ack_status = 0;
 			break;
 		}
@@ -49,14 +50,17 @@ uint8_t send_tx_wait_ack(struct lora* lora, uint8_t* tx, size_t tx_len) {
 		usleep(1);
 		do {
 			lora_read_reg(RegIrqFlags, &irq);
-		} while ((irq & 0x40U) == 0 || ((get_tick() - ack_timer) > 1000));
+			usleep(1);
+		} while ((irq & 0x40U) == 0 || (get_tick() - ack_timer) > PACKET_TIMEOUT);
 		lora_receive(lora, &rx_buf);
 
 		if (rx_buf == ACK_CODE || rx_buf == PKT_PASS || rx_buf == PKT_COMPLETE) {
+			printf("Got good ack\n");
 			ack_status = 1;
 			break;
 		}
 		printf("Error receiving ack, retrying...\n");
+		printf("err_count: %d\n", err_count);
 		err_count++;
 	}
 

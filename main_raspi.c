@@ -60,11 +60,12 @@ int main() {
 		}
 
 		/* Store files position incase of an ack error */
-		long int old_file_pos = ftell(fp);
+		//long int old_file_pos = ftell(fp);
 		generate_firmware_packet(&pkt, buf, bytes_read);
 		if (send_tx_wait_ack(&lora, (uint8_t*)&pkt, bytes_read + 4) != 1) {
 			printf("Failed packet transmission, exiting...\n");
-			fseek(fp, old_file_pos, SEEK_SET);
+			return 0;
+			//fseek(fp, old_file_pos, SEEK_SET);
 		}
 		else {
 			printf("ACK received, next chunk...\n");
