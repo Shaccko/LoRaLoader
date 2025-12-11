@@ -5,6 +5,14 @@
 #include <hal.h>
 #include <rcc.h>
 
+#define FLASH ((struct flash*) 0x40023C00)
+#define KEY1 0x45670123
+#define KEY2 0xCDEF89AB
+
+struct flash {
+	volatile uint32_t ACR, KEYR, OPTKEYR, SR, CR, OPTCR
+};
+
 
 static inline void blink_led(void) {
 	uint32_t led_pin = PIN_NUM(5);
@@ -21,6 +29,43 @@ static inline void blink_led(void) {
 	}
 }
 
+static inline void unlock_flash(void) {
+	struct flash* flash = FLASH;
+	flash->FKEYR = KEY1;
+	flash->FKEYR = KEY2;
+}
+
+static inline void lock_flash(void) {
+	struct flash* flash = FLASH;
+	flash->CR |= BIT(31);
+}
+
+/* Sector Erase */
+/* Check BSY in SR for no flash mem op
+ * Set SER bit, select sector to clean
+ * Set STRT bit in CR
+ * Wait for BSY
+ */
+static void clear_flash_sectors(uint8_t sectors) {
+	struct flash* flash = FLASH;
+
+	unlock_flash();
+	while (flash->SR & BIT(16));
+	/* Set sector erase bit, indicate sectors to erase */
+	flash->CR |= BIT(1) | (uint8_t) ((sectors << 3U)); 
+	flash->CR |= BIT(16); /* Set start bit */
+	while (flash->SR & BIT(16));
+	lock_flash();
+}
+
+static void write_flash_sectors(uint8_t sectors) {
+	struct flash* flash = FLASH;
+
+	unlock_flash();
+	while (flash ->SR & BIT(16));
+
+	lock_flash();
+}
 
 /* According to ARM's startup procedure, our SP and vec table 
  * gets fetched from our applications very first address, 
@@ -36,6 +81,13 @@ void boot(void) {
 
 	/* Bootloader stuff */
 	printf("Inside bootloader!\r\n");
+
+	/* Programming flash */
+	/* Check BSY 
+	 * Set PG in CR
+	 * Perform data write ops to desired mem addresses
+	 * Wait for BSY to clear
+	 */
 
 	/* Does code exist? We check this by AND'ing MSP that could 
 	 * *potentially* sit at 0x00000000 of our main app
@@ -69,10 +121,3 @@ void boot(void) {
 	/* Run forever */
 	for(;;);
 }
-
-
-
-
-
-
-

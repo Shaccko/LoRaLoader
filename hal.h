@@ -8,6 +8,8 @@
 
 #include <rcc.h>
 
+/* SYS Ctrl or something like that under ARM hardware */
+/* Just using it for FPU */
 #define CPACR ((volatile uint32_t*) 0xE000ED88) /* Address to enable FPU */
 
 #define BIT(x) (1UL << (x))
@@ -23,13 +25,6 @@
 
 /* GPIO Periph block */
 #define GPIO(bank) ((struct gpio*) (0x40020000 + 0x400 * (bank)))
-
-/* VTOR offset */
-#define SCB ((struct scb*) (0xE000ED00))
-
-/* SYS Ctrl or something like that under ARM hardware */
-/* Just using it for FPU */
-#define CPACR ((volatile uint32_t*) 0xE000ED88) /* Address to enable FPU */
 
 struct gpio {
 	volatile uint32_t MODER, OTYPER, OSPEEDR, PUPDR, IDR, ODR, BSRR, LCKR,

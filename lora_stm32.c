@@ -26,15 +26,12 @@ uint8_t new_lora(struct lora* lora) {
 	/* Set CS pin */ 
 	gpio_write_pin(LORA_PORT, CS_PIN|RST_PIN, GPIO_PIN_SET); 
 
-	/* Default values for loraWAN modem, don't care
-	 * about messing with these.
-	 * Should give us a range of 3-4km, according to lora
-	 * modem calculate by semtech.
-	 */
+	/* These values can be calculated using LoRa's semtech calculator */
 	lora->freq = FREQ_433;
 	lora->sf = SF_7;
 	//lora->bw = BW_125KHz;
-	lora->bw = BW_250KHz;
+	//lora->bw = BW_250KHz;
+	lora->bw = BW_500KHz;
 	lora->code_rate = CR_4_5;
 	lora->preamb = PREAMB_8;
 	lora->db_pwr = POWER_20dB;

@@ -1,9 +1,11 @@
 ENTRY(_reset);
 MEMORY {
-	flash(rx) : ORIGIN = 0x08004000, LENGTH = 512k - 16k
+	flash(rx) : ORIGIN = 0x08004000, LENGTH = 32k /* Occupying sectors 1-2 */
+	ota_flash(rx) : ORIGIN = 0x0800C000, LENGTH = 16k /* Sector 3 */
 	sram(rxw) : ORIGIN = 0x20000000, LENGTH = 128k
 }
 _estack = ORIGIN(sram) + LENGTH(sram);
+_sota_flash = ORIGIN(ota_flash);
 
 SECTIONS {
 	.vectors : { KEEP(*(.vectors*)) } > flash

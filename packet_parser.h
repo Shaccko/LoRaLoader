@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #define CHUNK_SIZE 200
+#define CHECKSUM_CODE 0x3
 #define ACK_CODE 0xAC
 #define OTA_BYTE 0xBC
 #define OTA_TX_START 0xCC

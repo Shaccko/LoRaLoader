@@ -31,7 +31,8 @@ uint8_t new_lora(struct lora* lora) {
 	lora->freq = FREQ_433;
 	lora->sf = SF_7;
 	//lora->bw = BW_125KHz;
-	lora->bw = BW_250KHz;
+	//lora->bw = BW_250KHz;
+	lora->bw = BW_500KHz;
 	lora->code_rate = CR_4_5;
 	lora->preamb = PREAMB_8;
 	lora->db_pwr = POWER_20dB;
@@ -106,13 +107,10 @@ uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
 	lora_set_mode(lora, TX); /* Write to FiFo and Transmit */
 
 	/* Check and clear Tx flag */
-	uint32_t counter = 0;
 	do {
 		lora_read_reg(RegIrqFlags, &reg);
 		usleep(1*1000);
-		counter++;
 	} while ((reg & 0x08U) == 0);
-	printf("lora ransmit counter: %d\n", counter);
 
 	lora_write_reg(RegIrqFlags, 0xFFU); 
 	lora_set_mode(lora, lora_mode);

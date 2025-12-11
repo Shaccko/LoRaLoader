@@ -47,28 +47,39 @@ uint8_t send_tx_wait_ack(struct lora* lora, uint8_t* tx, size_t tx_len) {
 
 		printf("Sent transmission\n");
 		lora_transmit(lora, tx, tx_len);
-		usleep(1);
-		uint32_t counter = 0;
 		do {
 			lora_read_reg(RegIrqFlags, &irq);
-			counter++;
 		} while ((irq & 0x40U) == 0 || (get_tick() - ack_timer) > PACKET_TIMEOUT);
 		lora_receive(lora, &rx_buf);
-		printf("irq flag counter: %d\n", counter);
 
 		if (rx_buf == ACK_CODE || rx_buf == PKT_PASS || rx_buf == PKT_COMPLETE) {
-			printf("Got good ack\n");
 			ack_status = 1;
 			break;
 		}
 		printf("Error receiving ack, retrying...\n");
-		printf("err_count: %d\n", err_count);
 		err_count++;
 	}
 
 	return ack_status;
 }
 
+/*lora_transmit(lora, &rx_buf);
+ * if (ack_flag) {
+ * if (send_wait_ack() != 1) {
+ * printf("Packets were corrupted inbetween ACKs, rewinding
+ * binary and resending...\n");
+ * fseek(fp, good_bytes, SEEK_SET);
+ * err_count++;
+ * }
+ * }
+ *
+ * ack fail on first n bytes
+ * fseek(fp, 0, SEEK_SET);
+ * ack fail on 2nd bytes, n*2
+ * fseek(fp, n, SEEK_SET);
+ * ack fail on 3rd bytes, n*3
+ * fseek(fp, n,
+ * total successful byte counter lol!!!*/
 void increment_chunk_num(void) {
 	chunk_num++;
 }
