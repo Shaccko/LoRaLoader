@@ -6,6 +6,8 @@
 #include <string.h>
 
 static uint8_t ota_tx_rdy = 0;
+static uint8_t chunk_num = 1;
+static uint32_t chunk_size = 0;
 
 static inline uint8_t validate_packet_checksum(uint8_t* buf, size_t buf_size, uint8_t pkt_checksum) {
 	uint8_t checksum = 0;
@@ -26,14 +28,12 @@ uint8_t validate_packets_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
 	 * [3] = checksum
 	 * [4-203] = data[CHUNK_SIZE]
 	 */
-
-	static uint8_t chunk_num = 1;
-
 	switch (rx_pkt[0] & 0xFF) {
 		case (PKT_COMPLETE):
 			printf("case pkt_complete\r\n");
 			ota_tx_rdy = 0;
 			chunk_num = 1;
+			printf("Chunk size: %d\r\n", chunk_size);
 			return PKT_COMPLETE;
 		case (OTA_TX_START):
 			printf("case pkt_start\r\n");
@@ -58,6 +58,7 @@ uint8_t validate_packets_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
 			out_pkt->chunk_size = rx_pkt[1];
 			out_pkt->chunk_num = chunk_num++;
 			memcpy(out_pkt->chunk_data, &rx_pkt[3], rx_pkt[1]);
+			chunk_size = chunk_size + rx_pkt[1];	
 			return PKT_PASS;
 	}
 
@@ -83,6 +84,7 @@ void kill_ota_firmware(void) {
 	printf("No incoming packets detected, erasing stored data.\r\n");
 	/* Kill firmware */
 	ota_tx_rdy = 0;
+	chunk_num = 1;
 }
 
 

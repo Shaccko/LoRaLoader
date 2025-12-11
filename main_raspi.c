@@ -72,7 +72,6 @@ int main() {
 			total = total + bytes_read;
 			increment_chunk_num();
 		}
-		usleep(1);
 	}
 	printf("File transfer complete, confirming checksum/size...\n");
 	tmp = PKT_COMPLETE;

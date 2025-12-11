@@ -33,7 +33,8 @@ uint8_t new_lora(struct lora* lora) {
 	 */
 	lora->freq = FREQ_433;
 	lora->sf = SF_7;
-	lora->bw = BW_125KHz;
+	//lora->bw = BW_125KHz;
+	lora->bw = BW_250KHz;
 	lora->code_rate = CR_4_5;
 	lora->preamb = PREAMB_8;
 	lora->db_pwr = POWER_20dB;

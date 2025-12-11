@@ -71,6 +71,7 @@
 #define FREQ_433 433
 #define SF_7 0x07
 #define BW_125KHz 0x07
+#define BW_250KHz 0x08
 #define CR_4_5 0x01
 #define POWER_20dB 0xFF
 #define OCP_100 0x100
