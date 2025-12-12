@@ -30,7 +30,8 @@ uint8_t validate_packet_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
 	 * [3] = checksum
 	 * [4-203] = data[CHUNK_SIZE]
 	 */
-	switch (rx_pkt[0] & 0xFF) {
+	/*
+	switch (rx_pkt[0]) {
 		case (PKT_COMPLETE): 
 			ota_tx_rdy = 0;
 			chunk_num = 1;
@@ -54,7 +55,6 @@ uint8_t validate_packet_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
 			}
 			printf("Passed 2");
 
-			/* Prepare firmware packet */
 			out_pkt->chunk_size = rx_pkt[1];
 			out_pkt->chunk_num = chunk_num++;
 			memcpy(out_pkt->chunk_data, &rx_pkt[3], rx_pkt[1]);
@@ -63,23 +63,42 @@ uint8_t validate_packet_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
 
 			return PKT_PASS;
 	}
-
-	return PKT_FAIL;
-}
-void parse_packet_state(struct lora* lora, uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
-	printf("Received packet\r\n");
-	uint8_t pkt_state = validate_packet_received(rx_pkt, out_pkt);
-	/* if (pkt_state == PKT_COMPLETE)
-	 * if (pkt_state == PKT_PASS)
-	 * if (pkt_state == PKT_STOP);
-	 */
-	switch (pkt_state) {
-		case (PKT_COMPLETE):
-			/*move firmware flash*/
-			break;
+	*/
+	if ((rx_pkt[1] > CHUNK_SIZE || rx_pkt[2] != chunk_num)) {
+			printf("Failed packet size check\r\n");
+			return PKT_FAIL;
 	}
+	if (validate_packet_checksum(&rx_pkt[4], (size_t)rx_pkt[1], rx_pkt[3]) == 0) {
+		printf("Failed checksum check\r\n");
+		return PKT_FAIL;
+	}
+	printf("Passed checks\r\n");
 
-	lora_transmit(lora, &pkt_state, 1);
+	return PKT_PASS;
+}
+void parse_packet_state(struct lora* lora, uint8_t* rx_buf, struct ota_pkt* out_pkt) {
+	printf("Received OTA packet\r\n");
+	uint8_t pkt_state;
+	switch (rx_buf[0]) {
+		case (OTA_TX_START):
+			ota_tx_rdy = 1;
+			chunk_num = 1;
+			pkt_state = ACK_CODE;
+		case (OTA_BYTE):
+			if (validate_packet_received(uint8_t* rx_buf) == PKT_PASS) {
+				out_pkt->chunk_size = rx_buf[1];
+				out_pkt->chunk_num = chunk_num++;
+				memcpy(out_pkt->chunk_data, &rx_buf[3], CHUNK_SIZE);
+			}
+			pkt_state = PKT_PASS;
+		case (PKT_COMPLETE):
+			ota_tx_rdy = 0;
+			chunk_num = 1;
+			pkt_state = PKT_COMPLETE;
+	}
+	lora_transmit(&lora, &pkt_state, 1);
+
+	return pkt_state;
 }
 
 void kill_ota_firmware(void) {

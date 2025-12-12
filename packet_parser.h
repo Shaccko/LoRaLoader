@@ -21,6 +21,6 @@ struct ota_pkt {
 void kill_ota_firmware(void);
 uint8_t validate_packets_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt);
 uint8_t get_ota_state(void);
-void parse_packet_state(struct lora* lora, uint8_t* rx_pkt, struct ota_pkt* out_pkt);
+void parse_packet_state(uint8_t* rx_pkt, struct ota_pkt* out_pkt);
 
 #endif 

@@ -62,7 +62,7 @@ int main() {
 		/* Store files position incase of an ack error */
 		//long int old_file_pos = ftell(fp);
 		generate_firmware_packet(&pkt, buf, bytes_read);
-		if (send_tx_wait_ack(&lora, (uint8_t*)&pkt, bytes_read + 4) != 1) {
+		if (send_tx_wait_ack(&lora, (uint8_t*)&pkt, CHUNK_SIZE + 4) != 1) {
 			printf("Failed packet transmission, exiting...\n");
 			return 0;
 			//fseek(fp, old_file_pos, SEEK_SET);
@@ -77,7 +77,6 @@ int main() {
 	tmp = PKT_COMPLETE;
 	lora_transmit(&lora, &tmp, 1);
 	
-	/* Wait for final ack */
 	lora_set_mode(&lora, SLEEP); /* Finished lora operations. */
 
 	printf("Total bytes on raspi: %d\n", total);

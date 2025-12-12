@@ -25,6 +25,11 @@ void generate_firmware_packet(struct packet* pkt, uint8_t* data_buf, size_t byte
 	pkt->chunk_size = (uint8_t)bytes_read;
 	pkt->chunk_num = get_chunk_num();
 	memcpy(pkt->data, data_buf, bytes_read);
+	/* Pad with 0xFF if last packed not 200 */
+	if (bytes_read < CHUNK_SIZE) { 
+		uint8_t pad_idx = (uint8_t) (CHUNK_SIZE - bytes_read);
+		memset(&pkt->data[bytes_read], 0xFF, pad_idx);
+	}
 	pkt->checksum = 0;
 
 	size_t i;

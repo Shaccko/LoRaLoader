@@ -35,12 +35,10 @@ SECTIONS {
 		_ebss = .;
 	} > sram
 
-	/* Allocate a region in sram that holds
-	 * incoming OTA firmware chunks */
-	.ota_chunk (NOLOAD) : {
-		*(.ota_chunk)
-		*(.ota_chunk*)
-	} > sram 
+	.magic_ota_byte (NOLOAD) : {
+		*(.magic_byte*);
+	} > sram
+	__magic_byte = LOADADDR(.magic_ota_byte);
 
 	. = ALIGN(8);
 	_end = .;
