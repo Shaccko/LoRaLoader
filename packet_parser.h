@@ -1,8 +1,9 @@
 #ifndef __PACKET_PARSER_H__
 #define __PACKET_PARSER_H__
 
-#include <lora_stm32.h>
 #include <stdint.h>
+
+#include <lora_stm32.h>
 
 #define CHUNK_SIZE 200
 #define CHECKSUM_CODE 0x3
@@ -18,9 +19,9 @@ struct ota_pkt {
 	uint8_t chunk_size, chunk_num, chunk_data[CHUNK_SIZE];
 };
 
+uint8_t parse_packet_state(uint8_t* rx_buf);
 void kill_ota_firmware(void);
-uint8_t validate_packets_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt);
 uint8_t get_ota_state(void);
-void parse_packet_state(uint8_t* rx_pkt, struct ota_pkt* out_pkt);
+void set_ota_state(void);
 
 #endif 

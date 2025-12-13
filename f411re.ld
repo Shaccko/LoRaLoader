@@ -38,7 +38,7 @@ SECTIONS {
 	.magic_ota_byte (NOLOAD) : {
 		*(.magic_byte*);
 	} > sram
-	__magic_byte = LOADADDR(.magic_ota_byte);
+	__magic_ota_byte = LOADADDR(.magic_ota_byte);
 
 	. = ALIGN(8);
 	_end = .;

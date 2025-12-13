@@ -1,6 +1,17 @@
 #include <stdint.h>
 
+#include <packet_parser.h>
+#include <hal.h>
 #include <flash.h>
+
+static inline void unlock_flash(void) {
+	FLASH->KEYR = KEY1;
+	FLASH->KEYR = KEY2;
+}
+
+static inline void lock_flash(void) {
+	FLASH->CR |= BIT(31);
+}
 
 /* Sector Erase */
 /* Check BSY in SR for no flash mem op
@@ -9,14 +20,12 @@
  * Wait for BSY
  */
 void clear_flash_sectors(uint8_t sectors) {
-	struct flash* flash = FLASH;
-
 	unlock_flash();
-	while (flash->SR & BIT(16));
+	while (FLASH->SR & BIT(16));
 	/* Set sector erase bit, indicate sectors to erase */
-	flash->CR |= BIT(1) | (uint8_t) ((sectors << 3U)); 
-	flash->CR |= BIT(16); /* Set start bit */
-	while (flash->SR & BIT(16));
+	FLASH->CR |= BIT(1) | (uint8_t) ((sectors << 3U)); 
+	FLASH->CR |= BIT(16); /* Set start bit */
+	while (FLASH->SR & BIT(16));
 	lock_flash();
 }
 

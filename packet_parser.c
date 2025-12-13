@@ -1,15 +1,16 @@
-#include <lora_stm32.h>
-#include <packet_parser.h>
-
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <flash.h>
+#include <lora_stm32.h>
+#include <packet_parser.h>
 
 static uint8_t ota_tx_rdy = 0;
 
 /* Chunk valid parse data */
 static uint8_t chunk_num = 1;
-static uint32_t chunk_size = 0;
+//static uint32_t chunk_size = 0;
 
 static inline uint8_t validate_packet_checksum(uint8_t* buf, size_t buf_size, uint8_t pkt_checksum) {
 	uint8_t checksum = 0;
@@ -23,52 +24,12 @@ static inline uint8_t validate_packet_checksum(uint8_t* buf, size_t buf_size, ui
 	return 1;
 }
 
-uint8_t validate_packet_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
-	/* [0] = header
-	 * [1] = chunk_size
-	 * [2] = chunk_num
-	 * [3] = checksum
-	 * [4-203] = data[CHUNK_SIZE]
-	 */
-	/*
-	switch (rx_pkt[0]) {
-		case (PKT_COMPLETE): 
-			ota_tx_rdy = 0;
-			chunk_num = 1;
-			return PKT_COMPLETE;
-
-		case (OTA_TX_START):
-			ota_tx_rdy = 1;
-			chunk_num = 1;
-			return ACK_CODE;
-
-		case (OTA_BYTE):
-			if ((rx_pkt[1] > CHUNK_SIZE) || rx_pkt[2] != chunk_num) {
-				printf("Failed check 1\r\n");
-				return PKT_FAIL;
-			}
-
-			printf("Passed 1\r\n");
-			if (validate_packet_checksum(&rx_pkt[4], (size_t)rx_pkt[1],  rx_pkt[3]) == 0) {
-				printf("failed2\r\n");
-				return PKT_FAIL;
-			}
-			printf("Passed 2");
-
-			out_pkt->chunk_size = rx_pkt[1];
-			out_pkt->chunk_num = chunk_num++;
-			memcpy(out_pkt->chunk_data, &rx_pkt[3], rx_pkt[1]);
-
-			chunk_size = chunk_size + rx_pkt[1];	
-
-			return PKT_PASS;
-	}
-	*/
-	if ((rx_pkt[1] > CHUNK_SIZE || rx_pkt[2] != chunk_num)) {
+static uint8_t validate_packet_received(uint8_t* rx_buf) {
+	if ((rx_buf[1] > CHUNK_SIZE || rx_buf[2] != chunk_num)) {
 			printf("Failed packet size check\r\n");
 			return PKT_FAIL;
 	}
-	if (validate_packet_checksum(&rx_pkt[4], (size_t)rx_pkt[1], rx_pkt[3]) == 0) {
+	if (validate_packet_checksum(&rx_buf[4], (size_t)rx_buf[1], rx_buf[3]) == 0) {
 		printf("Failed checksum check\r\n");
 		return PKT_FAIL;
 	}
@@ -76,36 +37,43 @@ uint8_t validate_packet_received(uint8_t* rx_pkt, struct ota_pkt* out_pkt) {
 
 	return PKT_PASS;
 }
-void parse_packet_state(struct lora* lora, uint8_t* rx_buf, struct ota_pkt* out_pkt) {
-	printf("Received OTA packet\r\n");
+
+uint8_t parse_packet_state(uint8_t* rx_buf) {
 	uint8_t pkt_state;
 	switch (rx_buf[0]) {
 		case (OTA_TX_START):
 			ota_tx_rdy = 1;
 			chunk_num = 1;
 			pkt_state = ACK_CODE;
+			break;
 		case (OTA_BYTE):
-			if (validate_packet_received(uint8_t* rx_buf) == PKT_PASS) {
-				out_pkt->chunk_size = rx_buf[1];
-				out_pkt->chunk_num = chunk_num++;
-				memcpy(out_pkt->chunk_data, &rx_buf[3], CHUNK_SIZE);
+			printf("Received OTA packet\r\n");
+			if (validate_packet_received(rx_buf) == PKT_PASS) {
+				struct ota_pkt out_pkt;
+				out_pkt.chunk_size = rx_buf[1];
+				out_pkt.chunk_num = chunk_num++;
+				memcpy(out_pkt.chunk_data, &rx_buf[3], CHUNK_SIZE);
+				write_flash_b(&out_pkt);
 			}
 			pkt_state = PKT_PASS;
+			break;
 		case (PKT_COMPLETE):
 			ota_tx_rdy = 0;
 			chunk_num = 1;
 			pkt_state = PKT_COMPLETE;
+			break;
 	}
-	lora_transmit(&lora, &pkt_state, 1);
 
 	return pkt_state;
 }
 
 void kill_ota_firmware(void) {
-	printf("No incoming packets detected, erasing stored data.\r\n");
+	printf("Packet reception stalled, clearing sector data...\r\n");
 	/* Kill firmware */
 	ota_tx_rdy = 0;
 	chunk_num = 1;
+
+	clear_flash_sectors(FLASHB_SECTOR);
 }
 
 
@@ -113,3 +81,6 @@ uint8_t get_ota_state(void) {
 	return ota_tx_rdy;
 }
 
+void set_ota_state(void) {
+	ota_tx_rdy = 1;
+}
