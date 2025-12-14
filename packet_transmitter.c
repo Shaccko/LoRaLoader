@@ -31,6 +31,10 @@ void generate_firmware_packet(struct packet* pkt, uint8_t* data_buf, size_t byte
 		memset(&pkt->data[bytes_read], 0xFF, pad_idx);
 	}
 	pkt->checksum = 0;
+	static uint32_t num = 0;
+	printf("chunk_num=%u, flash_addr=0x%08lx, first4=%02X %02X %02X %02X\n",
+			pkt->chunk_num, (unsigned long)(0x0800C000 + num++ * CHUNK_SIZE),
+			pkt->data[0], pkt->data[1], pkt->data[2], pkt->data[3]);
 
 	size_t i;
 	for (i = 0; i < bytes_read; i++) {

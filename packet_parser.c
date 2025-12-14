@@ -52,7 +52,7 @@ uint8_t parse_packet_state(uint8_t* rx_buf) {
 				struct ota_pkt out_pkt;
 				out_pkt.chunk_size = rx_buf[1];
 				out_pkt.chunk_num = chunk_num++;
-				memcpy(out_pkt.chunk_data, &rx_buf[3], CHUNK_SIZE);
+				memcpy(out_pkt.chunk_data, &rx_buf[4], CHUNK_SIZE);
 				write_flash_b(&out_pkt);
 			}
 			pkt_state = PKT_PASS;

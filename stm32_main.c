@@ -31,7 +31,8 @@ int main() {
 	lora_set_mode(&lora, RXCONT);
 
 	for(;;) {
-		printf("%x\r\n", magic_byte);
+		printf("%X\r\n", (*(uint32_t*)0x0800C000));
+		printf("%X\r\n", (*(uint32_t*)0x0800C000+4));
 		if (rx_ready) {
 			if (rx_buf[0] == OTA_MAGIC_BYTE) {
 				magic_byte = OTA_MAGIC_BYTE;

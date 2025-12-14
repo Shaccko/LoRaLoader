@@ -104,7 +104,7 @@ static void boot_flash_b(void) {
 	/* Does code exist? We check this by AND'ing MSP that could 
 	 * *potentially* sit at 0x00000000 of our main app
 	 */
-	if (((*(uint32_t*) flash_b) & 0x2FFE0000) == 0x2002000) {
+	if (((*(uint32_t*) flash_b) & 0x2FFE0000) == 0x20020000) {
 		blink_led_b();
 
 		/* Disable systick for critical statements */
@@ -170,7 +170,7 @@ void boot(void) {
 		boot_flash_b();
 	}
 	else {
-		printf("No flash_b firmware detected, booting to flash_a\r\n");
+		printf("No magic byte for flash b detected, booting from flash a\r\n");
 		lora_set_mode(&lora, SLEEP);
 		boot_flash_a();
 	}

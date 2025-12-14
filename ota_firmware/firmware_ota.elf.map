@@ -1,128 +1,128 @@
 
 Discarded input sections
 
- .text          0x00000000        0x0 /tmp/ccbldVQa.o
- .data          0x00000000        0x0 /tmp/ccbldVQa.o
- .bss           0x00000000        0x0 /tmp/ccbldVQa.o
- .text          0x00000000        0x0 /tmp/ccTiqRoc.o
- .data          0x00000000        0x0 /tmp/ccTiqRoc.o
- .bss           0x00000000        0x0 /tmp/ccTiqRoc.o
- .text          0x00000000        0x0 /tmp/ccsP7kdc.o
- .data          0x00000000        0x0 /tmp/ccsP7kdc.o
- .bss           0x00000000        0x0 /tmp/ccsP7kdc.o
- .text          0x00000000        0x0 /tmp/ccFj6Fza.o
- .data          0x00000000        0x0 /tmp/ccFj6Fza.o
- .bss           0x00000000        0x0 /tmp/ccFj6Fza.o
+ .text          0x00000000        0x0 /tmp/cc4K9y9K.o
+ .data          0x00000000        0x0 /tmp/cc4K9y9K.o
+ .bss           0x00000000        0x0 /tmp/cc4K9y9K.o
+ .text          0x00000000        0x0 /tmp/ccnroywK.o
+ .data          0x00000000        0x0 /tmp/ccnroywK.o
+ .bss           0x00000000        0x0 /tmp/ccnroywK.o
+ .text          0x00000000        0x0 /tmp/ccq7kWfL.o
+ .data          0x00000000        0x0 /tmp/ccq7kWfL.o
+ .bss           0x00000000        0x0 /tmp/ccq7kWfL.o
+ .text          0x00000000        0x0 /tmp/ccbScwPJ.o
+ .data          0x00000000        0x0 /tmp/ccbScwPJ.o
+ .bss           0x00000000        0x0 /tmp/ccbScwPJ.o
  .text.uart_read_ready
-                0x00000000       0x1c /tmp/ccFj6Fza.o
+                0x00000000       0x1c /tmp/ccbScwPJ.o
  .text.uart_read_byte
-                0x00000000       0x1a /tmp/ccFj6Fza.o
+                0x00000000       0x1a /tmp/ccbScwPJ.o
  .text.print_stop
-                0x00000000       0x28 /tmp/ccFj6Fza.o
- .rodata        0x00000000        0x7 /tmp/ccFj6Fza.o
+                0x00000000       0x28 /tmp/ccbScwPJ.o
+ .rodata        0x00000000        0x7 /tmp/ccbScwPJ.o
  .data.msg.6642
-                0x00000000        0x4 /tmp/ccFj6Fza.o
+                0x00000000        0x4 /tmp/ccbScwPJ.o
  .data.msg_len.6643
-                0x00000000        0x4 /tmp/ccFj6Fza.o
+                0x00000000        0x4 /tmp/ccbScwPJ.o
 
 Memory Configuration
 
 Name             Origin             Length             Attributes
-flash            0x08004000         0x0007c000         xr
+flash            0x0800c000         0x00004000         xr
 sram             0x20000000         0x00020000         xrw
 *default*        0x00000000         0xffffffff
 
 Linker script and memory map
 
-LOAD /tmp/ccbldVQa.o
-LOAD /tmp/ccTiqRoc.o
-LOAD /tmp/ccsP7kdc.o
-LOAD /tmp/ccFj6Fza.o
+LOAD /tmp/cc4K9y9K.o
+LOAD /tmp/ccnroywK.o
+LOAD /tmp/ccq7kWfL.o
+LOAD /tmp/ccbScwPJ.o
 LOAD /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/hard/libc_nano.a
 LOAD /usr/lib/gcc/arm-none-eabi/7.3.1/thumb/v7e-m/fpv4-sp/hard/libgcc.a
                 0x20020000                _estack = (ORIGIN (sram) + LENGTH (sram))
 
-.vectors        0x08004000      0x1ac
+.vectors        0x0800c000      0x1ac
  *(.vectors*)
- .vectors       0x08004000      0x1ac /tmp/ccsP7kdc.o
-                0x08004000                tab
+ .vectors       0x0800c000      0x1ac /tmp/ccq7kWfL.o
+                0x0800c000                tab
 
-.rodata         0x080041ac        0xe
+.rodata         0x0800c1ac        0xe
  *(.rodata)
- .rodata        0x080041ac        0xe /tmp/ccbldVQa.o
+ .rodata        0x0800c1ac        0xe /tmp/cc4K9y9K.o
  *(.rodata*)
 
-.text           0x080041bc      0x3b4
+.text           0x0800c1bc      0x3b4
  *(.text)
  *(.text*)
  .text.get_tick
-                0x080041bc       0x18 /tmp/ccbldVQa.o
- .text.delay    0x080041d4       0x28 /tmp/ccbldVQa.o
- .text.main     0x080041fc       0x2c /tmp/ccbldVQa.o
-                0x080041fc                main
+                0x0800c1bc       0x18 /tmp/cc4K9y9K.o
+ .text.delay    0x0800c1d4       0x28 /tmp/cc4K9y9K.o
+ .text.main     0x0800c1fc       0x2c /tmp/cc4K9y9K.o
+                0x0800c1fc                main
  .text.systick_init
-                0x08004228       0x40 /tmp/ccTiqRoc.o
-                0x08004228                systick_init
+                0x0800c228       0x40 /tmp/ccnroywK.o
+                0x0800c228                systick_init
  .text.SysTick_Handler
-                0x08004268       0x1c /tmp/ccTiqRoc.o
-                0x08004268                SysTick_Handler
- .text._reset   0x08004284       0x50 /tmp/ccsP7kdc.o
-                0x08004284                _reset
+                0x0800c268       0x1c /tmp/ccnroywK.o
+                0x0800c268                SysTick_Handler
+ .text._reset   0x0800c284       0x50 /tmp/ccq7kWfL.o
+                0x0800c284                _reset
  .text.gpio_set_mode
-                0x080042d4       0xbc /tmp/ccFj6Fza.o
+                0x0800c2d4       0xbc /tmp/ccbScwPJ.o
  .text.gpio_set_af
-                0x08004390       0xaa /tmp/ccFj6Fza.o
- *fill*         0x0800443a        0x2 
+                0x0800c390       0xaa /tmp/ccbScwPJ.o
+ *fill*         0x0800c43a        0x2 
  .text.uart_init
-                0x0800443c       0x88 /tmp/ccFj6Fza.o
-                0x0800443c                uart_init
- .text.spin     0x080044c4       0x20 /tmp/ccFj6Fza.o
+                0x0800c43c       0x88 /tmp/ccbScwPJ.o
+                0x0800c43c                uart_init
+ .text.spin     0x0800c4c4       0x20 /tmp/ccbScwPJ.o
  .text.uart_write_byte
-                0x080044e4       0x2e /tmp/ccFj6Fza.o
-                0x080044e4                uart_write_byte
+                0x0800c4e4       0x2e /tmp/ccbScwPJ.o
+                0x0800c4e4                uart_write_byte
  .text.uart_write_buf
-                0x08004512       0x30 /tmp/ccFj6Fza.o
-                0x08004512                uart_write_buf
- *fill*         0x08004542        0x2 
+                0x0800c512       0x30 /tmp/ccbScwPJ.o
+                0x0800c512                uart_write_buf
+ *fill*         0x0800c542        0x2 
  .text.uart2_init
-                0x08004544       0x2c /tmp/ccFj6Fza.o
-                0x08004544                uart2_init
+                0x0800c544       0x2c /tmp/ccbScwPJ.o
+                0x0800c544                uart2_init
 
-.glue_7         0x08004570        0x0
- .glue_7        0x08004570        0x0 linker stubs
+.glue_7         0x0800c570        0x0
+ .glue_7        0x0800c570        0x0 linker stubs
 
-.glue_7t        0x08004570        0x0
- .glue_7t       0x08004570        0x0 linker stubs
+.glue_7t        0x0800c570        0x0
+ .glue_7t       0x0800c570        0x0 linker stubs
 
-.vfp11_veneer   0x08004570        0x0
- .vfp11_veneer  0x08004570        0x0 linker stubs
+.vfp11_veneer   0x0800c570        0x0
+ .vfp11_veneer  0x0800c570        0x0 linker stubs
 
-.v4_bx          0x08004570        0x0
- .v4_bx         0x08004570        0x0 linker stubs
+.v4_bx          0x0800c570        0x0
+ .v4_bx         0x0800c570        0x0 linker stubs
 
-.iplt           0x08004570        0x0
- .iplt          0x08004570        0x0 /tmp/ccbldVQa.o
+.iplt           0x0800c570        0x0
+ .iplt          0x0800c570        0x0 /tmp/cc4K9y9K.o
 
-.rel.dyn        0x08004570        0x0
- .rel.iplt      0x08004570        0x0 /tmp/ccbldVQa.o
+.rel.dyn        0x0800c570        0x0
+ .rel.iplt      0x0800c570        0x0 /tmp/cc4K9y9K.o
 
-.data           0x20000000        0x4 load address 0x08004570
+.data           0x20000000        0x4 load address 0x0800c570
                 0x20000000                _sdata = .
  *(.data)
  *(.data*)
- .data.uart2    0x20000000        0x4 /tmp/ccFj6Fza.o
+ .data.uart2    0x20000000        0x4 /tmp/ccbScwPJ.o
                 0x20000000                uart2
                 0x20000004                _edata = .
-                0x08004570                _sidata = LOADADDR (.data)
+                0x0800c570                _sidata = LOADADDR (.data)
 
-.igot.plt       0x20000004        0x0 load address 0x08004574
- .igot.plt      0x20000004        0x0 /tmp/ccbldVQa.o
+.igot.plt       0x20000004        0x0 load address 0x0800c574
+ .igot.plt      0x20000004        0x0 /tmp/cc4K9y9K.o
 
-.bss            0x20000004        0x4 load address 0x08004574
+.bss            0x20000004        0x4 load address 0x0800c574
                 0x20000004                _sbss = .
  *(.bss)
  *(.bss*)
- .bss.s_ticks   0x20000004        0x4 /tmp/ccTiqRoc.o
+ .bss.s_ticks   0x20000004        0x4 /tmp/ccnroywK.o
                 0x20000004                s_ticks
  *(COMMON)
                 0x20000008                _ebss = .
@@ -131,19 +131,19 @@ LOAD /usr/lib/gcc/arm-none-eabi/7.3.1/thumb/v7e-m/fpv4-sp/hard/libgcc.a
 OUTPUT(firmware_ota.elf elf32-littlearm)
 
 .comment        0x00000000       0x57
- .comment       0x00000000       0x57 /tmp/ccbldVQa.o
+ .comment       0x00000000       0x57 /tmp/cc4K9y9K.o
                                  0x58 (size before relaxing)
- .comment       0x00000057       0x58 /tmp/ccTiqRoc.o
- .comment       0x00000057       0x58 /tmp/ccsP7kdc.o
- .comment       0x00000057       0x58 /tmp/ccFj6Fza.o
+ .comment       0x00000057       0x58 /tmp/ccnroywK.o
+ .comment       0x00000057       0x58 /tmp/ccq7kWfL.o
+ .comment       0x00000057       0x58 /tmp/ccbScwPJ.o
 
 .ARM.attributes
                 0x00000000       0x39
  .ARM.attributes
-                0x00000000       0x39 /tmp/ccbldVQa.o
+                0x00000000       0x39 /tmp/cc4K9y9K.o
  .ARM.attributes
-                0x00000039       0x39 /tmp/ccTiqRoc.o
+                0x00000039       0x39 /tmp/ccnroywK.o
  .ARM.attributes
-                0x00000072       0x39 /tmp/ccsP7kdc.o
+                0x00000072       0x39 /tmp/ccq7kWfL.o
  .ARM.attributes
-                0x000000ab       0x39 /tmp/ccFj6Fza.o
+                0x000000ab       0x39 /tmp/ccbScwPJ.o

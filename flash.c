@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 
 #include <packet_parser.h>
 #include <hal.h>
@@ -20,12 +21,14 @@ static inline void lock_flash(void) {
  * Wait for BSY
  */
 void clear_flash_sectors(uint8_t sectors) {
+	FLASH->CR = 0;
 	unlock_flash();
 	while (FLASH->SR & BIT(16));
 	/* Set sector erase bit, indicate sectors to erase */
 	FLASH->CR |= BIT(1) | (uint8_t) ((sectors << 3U)); 
 	FLASH->CR |= BIT(16); /* Set start bit */
 	while (FLASH->SR & BIT(16));
+	FLASH->CR &= ~(BIT(1));
 	lock_flash();
 }
 
@@ -38,20 +41,25 @@ void clear_flash_sectors(uint8_t sectors) {
 void write_flash_b(struct ota_pkt* ota_pkt) {
 	extern uint32_t __sota_flash;
 
+	FLASH->CR = 0;
 	unlock_flash();
 	while (FLASH->SR & BIT(16));
-	size_t i;
+	FLASH->CR |= (2U << 8U); /* x32 word writes */
+	FLASH->CR |= BIT(0); /* PG bit */
 	uint32_t* sota_flash = (uint32_t*)&__sota_flash;
 	uint32_t chunk_word = 0;
 	/* Maybe transmitter could send words instead of single bytes */
 	/* Write words to Flash B region */
-	for (uint32_t word = 0U; i < ota_pkt->chunk_size; i = i + 4U) {
-		chunk_word = ((uint32_t) ota_pkt->chunk_data[word + 0U] << 24) |
-			((uint32_t) ota_pkt->chunk_data[word + 1U] << 16) |
-			((uint32_t) ota_pkt->chunk_data[word + 2U] << 8) |
-			((uint32_t) ota_pkt->chunk_data[word + 3U] << 0);
-		*(sota_flash + word) = chunk_word;
+	static size_t chunk_counter = 0;
+	for (uint32_t word = 0U; word <= CHUNK_SIZE - 4; word = word + 4U) {
+		chunk_word = ((uint32_t) ota_pkt->chunk_data[word + 0U] << 0) |
+			((uint32_t) ota_pkt->chunk_data[word + 1U] << 8) |
+			((uint32_t) ota_pkt->chunk_data[word + 2U] << 16) |
+			((uint32_t) ota_pkt->chunk_data[word + 3U] << 24);
+		*(sota_flash + chunk_counter) = chunk_word;
+		chunk_counter++; 
 	}
 	while (FLASH->SR & BIT(16));
+	FLASH->CR &= ~(BIT(0));
 	lock_flash();
 }

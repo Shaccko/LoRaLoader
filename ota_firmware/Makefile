@@ -9,7 +9,7 @@ LDFLAGS ?= -nostartfiles -nostdlib --specs nano.specs -lc -lgcc -Wl,--gc-section
 FIRMWARE_LD ?= f411re.ld
 FIRMWARE_SOURCES = stm32_ota_main.c rcc.c startup_f411re.c uart.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h 
-FIRMWARE_ADDR = 0x08004000
+FIRMWARE_ADDR = 0x0800C000
 
 ifeq ($(OS),WINDOWS_NT)
 	RM = cmd /C del /Q /F *.elf *~ *.o *.bin ota_upload_raspi
