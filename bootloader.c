@@ -7,16 +7,14 @@
 #include <rcc.h>
 #include <packet_parser.h>
 #include <lora_stm32.h>
-#include <exti.h>
 
 #define MAX_CHUNK_SIZE 200
 
-uint8_t rx_ready = 0;
+volatile uint8_t rx_ready = 0;
 uint8_t rx_buf[CHUNK_SIZE + 4];
 struct lora lora;
 
-
-static inline void blink_led_a(void) {
+static inline void blink_led(void) {
 	uint32_t led_pin = PIN_NUM(5);
 	uint8_t led_port = 'A';
 
@@ -29,18 +27,6 @@ static inline void blink_led_a(void) {
 	}
 }
 
-static inline void blink_led_b(void) {
-	uint32_t led_pin = PIN_NUM(5);
-	uint8_t led_port = 'A';
-
-	gpio_set_mode(led_pin, GPIO_MODE_OUTPUT, led_port);
-
-	size_t i;
-	for (i = 0; i < 5; i++) {
-		gpio_write_pin(led_port, led_pin, GPIO_PIN_RESET);
-		delay(500);
-	}
-}
 static void download_ota_packets(void) {
 	int ack_timeout = 0;
 	while(1) {
@@ -54,6 +40,7 @@ static void download_ota_packets(void) {
 		rx_ready = 0;
 		}
 		if (((int) get_tick() - ack_timeout) > 5000) {
+			printf("Packet reception stalled, clearing sector data...\r\n");
 			kill_ota_firmware();
 			return;
 		}
@@ -64,13 +51,14 @@ static void boot_flash_a(void) {
 	extern uint32_t __app_start;
 
 	/* Does code exist? We check this by AND'ing MSP that could 
-	 * *potentially* sit at 0x00000000 of our main app
+	 * *potentially* sit at 0x20020000 of our flash region 
 	 */
 	uint32_t app_flash = (uint32_t)(&__app_start); /* Grab address of app's start symbol from linker */
 	if (((*(uint32_t*) app_flash) & 0x2FFE0000) == 0x20020000) {
-		blink_led_a();
+		blink_led();
 
 		/* Disable systick for critical statements */
+		disable_irq();
 		SYSTICK->CTRL = 0;
 		SYSTICK->LOAD = 0;
 		SYSTICK->VAL = 0;
@@ -86,6 +74,7 @@ static void boot_flash_a(void) {
 		__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
 
 		/* Execute _reset of app */
+		enable_irq();
 		app();
 	}
 	else {
@@ -93,7 +82,7 @@ static void boot_flash_a(void) {
 	}
 
 	/* Run forever */
-	for(;;);
+	for(;;) (void)0;
 }
 
 
@@ -102,12 +91,13 @@ static void boot_flash_b(void) {
 
 	uint32_t flash_b = (uint32_t)&__sota_flash;
 	/* Does code exist? We check this by AND'ing MSP that could 
-	 * *potentially* sit at 0x00000000 of our main app
+	 * *potentially* sit at 0x20020000 of our flash region 
 	 */
 	if (((*(uint32_t*) flash_b) & 0x2FFE0000) == 0x20020000) {
-		blink_led_b();
+		blink_led();
 
 		/* Disable systick for critical statements */
+		disable_irq();
 		SYSTICK->CTRL = 0;
 		SYSTICK->LOAD = 0;
 		SYSTICK->VAL = 0;
@@ -122,14 +112,16 @@ static void boot_flash_b(void) {
 		/* Some asm to switch msp from bootloader to main app */
 		__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
 
+		enable_irq();
 		/* Execute _reset of app */
 		app();
 	}
 	else {
-		printf("Flash B does not exist.\r\n");
+		printf("Flash B does not exist, trying Flash A.\r\n");
+		boot_flash_a();
 	}
 
-	for(;;);
+	for(;;) (void)0;
 }
 
 
@@ -167,16 +159,16 @@ void boot(void) {
 		download_ota_packets();
 		/* Done, reset magic byte */
 		((*(uint8_t*)&__magic_ota_byte)) = 0;
+		/* Attempt boot */
 		boot_flash_b();
 	}
 	else {
-		printf("No magic byte for flash b detected, booting from flash a\r\n");
+		printf("No magic byte for Flash B detected, booting from Flash A\r\n");
 		lora_set_mode(&lora, SLEEP);
 		boot_flash_a();
 	}
 
-	/* Run forever */
-	for(;;);
+	for(;;) (void)0;
 }
 
 void lora_rx_irq(void) {

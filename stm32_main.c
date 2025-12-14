@@ -13,7 +13,7 @@
 
 struct lora lora;
 uint8_t rx_buf[CHUNK_SIZE + 4]; /* Header + CHUNK_SIZE */
-uint8_t rx_ready = 0;
+volatile uint8_t rx_ready = 0;
 
 __attribute__((section(".magic_ota_byte"))) volatile uint8_t magic_byte = 0;
 
@@ -31,13 +31,10 @@ int main() {
 	lora_set_mode(&lora, RXCONT);
 
 	for(;;) {
-		printf("%X\r\n", (*(uint32_t*)0x0800C000));
-		printf("%X\r\n", (*(uint32_t*)0x0800C000+4));
 		if (rx_ready) {
 			if (rx_buf[0] == OTA_MAGIC_BYTE) {
 				magic_byte = OTA_MAGIC_BYTE;
 				printf("OTA firmware detected, reset MCU to load new firmware.\r\n");
-				printf("%d\r\n", magic_byte);
 			}
 			rx_ready = 0;
 		}

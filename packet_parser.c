@@ -69,7 +69,6 @@ uint8_t parse_packet_state(uint8_t* rx_buf) {
 }
 
 void kill_ota_firmware(void) {
-	printf("Packet reception stalled, clearing sector data...\r\n");
 	/* Kill firmware */
 	ota_tx_rdy = 0;
 	chunk_num = 1;

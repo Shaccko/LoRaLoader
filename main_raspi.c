@@ -30,19 +30,13 @@ int main() {
 	if (status) printf("lora detected\n");
 	lora_set_mode(&lora, RXCONT);
 
-	FILE *fp = fopen("firmware_ota.bin", "rb");
+	FILE *fp = fopen("./ota_firmware/firmware_ota.bin", "rb");
 	if (!fp) {
-		perror("fopen failed\n");
+		perror("fopen failed");
 		return 1;
 	}
 
-	/* Read total file size */
-	/* lora packets to be sent out */
-	uint8_t buf[CHUNK_SIZE];
-	memset(buf, 0, CHUNK_SIZE);
-	struct packet pkt;
-
-	/* Our chunk data */
+		/* Our chunk data */
 	uint32_t total = 0;
 
 	/* Send TX_START ACK */
@@ -59,6 +53,11 @@ int main() {
 	}
 	printf("MCU inside bootloader, sending packets...\n");
 
+	/* lora packets to be sent out */
+	uint8_t buf[CHUNK_SIZE];
+	memset(buf, 0, CHUNK_SIZE);
+
+
 	size_t bytes_read;
 	printf("Starting OTA transfer\n");
 	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
@@ -68,13 +67,11 @@ int main() {
 			return 0;
 		}
 
-		/* Store files position incase of an ack error */
-		//long int old_file_pos = ftell(fp);
+		struct packet pkt;
 		generate_firmware_packet(&pkt, buf, bytes_read);
 		if (send_tx_wait_ack(&lora, (uint8_t*)&pkt, CHUNK_SIZE + 4) != 1) {
 			printf("Failed packet transmission, exiting...\n");
 			return 0;
-			//fseek(fp, old_file_pos, SEEK_SET);
 		}
 		else {
 			printf("ACK received, next chunk...\n");
@@ -82,7 +79,7 @@ int main() {
 			increment_chunk_num();
 		}
 	}
-	printf("File transfer complete, confirming checksum/size...\n");
+	printf("File transfer complete");
 	tmp = PKT_COMPLETE;
 	lora_transmit(&lora, &tmp, 1);
 	

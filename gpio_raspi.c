@@ -15,7 +15,7 @@ int gpio_alloc(void) {
 	static uint32_t block_size = 4*1024; /* Page size length, which is less than GPIO's peripheral size */
 	int fd = open(gpio_dev, O_SYNC | O_RDWR);
 	if (fd < 0) {
-		perror("Error opening gpiomem\n");
+		perror("Error opening gpiomem");
 		return -1;
 	}
 
@@ -29,7 +29,7 @@ int gpio_alloc(void) {
 			0
 		);
 	if (gpio == MAP_FAILED) {
-		perror("Error in gpio mmap\n");
+		perror("Error in gpio mmap");
 		close(fd);
 		return -1;
 	}

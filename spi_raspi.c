@@ -19,7 +19,7 @@ int spidev_init(void) {
 	 * ioctl(device, register_request, reg_value) - typical syntax
 	 */
 	if (open_spidev() < 0) {
-		perror("SPI device failed\n");
+		perror("SPI device failed");
 		return -1;
 	}
 	
@@ -56,7 +56,7 @@ int spidev_transmit_receive(uint8_t* mosi_buf, uint8_t* miso_buf,  size_t mosi_l
 	};
 
 	if (ioctl(fd_spi, SPI_IOC_MESSAGE(1), &packet) < 0) {
-		perror("Error in SPI transmission\n");
+		perror("Error in SPI transmission");
 		return -1;
 	}
 	return 1;
