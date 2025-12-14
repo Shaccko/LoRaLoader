@@ -30,7 +30,7 @@ int main() {
 	if (status) printf("lora detected\n");
 	lora_set_mode(&lora, RXCONT);
 
-	FILE *fp = fopen("firmware.bin", "rb");
+	FILE *fp = fopen("firmware_ota.bin", "rb");
 	if (!fp) {
 		perror("fopen failed\n");
 		return 1;
@@ -52,7 +52,7 @@ int main() {
 	uint8_t tmp = MAGIC_OTA_BYTE;
 	uint8_t irq;
 	lora_transmit(&lora, &tmp, 1);
-	while (rx_buf != 0xCC) {
+	while (rx_buf != ACK_CODE) {
 		lora_read_reg(RegIrqFlags, &irq);
 		usleep(500 * 1000);
 		if (irq & 0x40U) lora_receive(&lora, &rx_buf);

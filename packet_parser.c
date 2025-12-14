@@ -58,6 +58,7 @@ uint8_t parse_packet_state(uint8_t* rx_buf) {
 			pkt_state = PKT_PASS;
 			break;
 		case (PKT_COMPLETE):
+			printf("Last packet received.\r\n");
 			ota_tx_rdy = 0;
 			chunk_num = 1;
 			pkt_state = PKT_COMPLETE;

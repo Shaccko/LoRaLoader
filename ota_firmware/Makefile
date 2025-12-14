@@ -7,7 +7,7 @@ CFLAGS ?= -W -Wall -Wextra -Wundef -Wshadow -Wdouble-promotion \
 LDFLAGS ?= -nostartfiles -nostdlib --specs nano.specs -lc -lgcc -Wl,--gc-sections -Wl,-Map=$@.map
 
 FIRMWARE_LD ?= f411re.ld
-FIRMWARE_SOURCES = stm32_ota_main.c rcc.c startup_f411re.c uart.c 
+FIRMWARE_SOURCES = stm32_ota_main.c rcc.c startup_f411re.c uart.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h 
 FIRMWARE_ADDR = 0x08004000
 
