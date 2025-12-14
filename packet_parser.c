@@ -41,12 +41,12 @@ static uint8_t validate_packet_received(uint8_t* rx_buf) {
 uint8_t parse_packet_state(uint8_t* rx_buf) {
 	uint8_t pkt_state;
 	switch (rx_buf[0]) {
-		case (OTA_TX_START):
+		case (OTA_MAGIC_BYTE):
 			ota_tx_rdy = 1;
 			chunk_num = 1;
 			pkt_state = ACK_CODE;
 			break;
-		case (OTA_BYTE):
+		case (OTA_PACKET_BYTE):
 			printf("Received OTA packet\r\n");
 			if (validate_packet_received(rx_buf) == PKT_PASS) {
 				struct ota_pkt out_pkt;

@@ -8,8 +8,8 @@
 #include <gpio_raspi.h>
 
 #define ACK_CODE 0xAC
-#define OTA_BYTE 0xBC
-#define OTA_TX_START 0xCC
+#define PACKET_OTA_BYTE 0xBC
+#define MAGIC_OTA_BYTE 0xCC
 #define PKT_PASS 0xEC
 #define PKT_COMPLETE 0xAA
 #define OTA_ERR 0xFF

@@ -61,16 +61,24 @@ void boot(void) {
 	uart2_init();
 	spi1_init();
 
+	new_lora(&lora);
+
 	/* Bootloader stuff */
 	printf("Inside bootloader!\r\n");
 
 	/* Magic OTA byte exists, expect OTA firmware packets */
-	if ((*(uint32_t*)&__magic_ota_byte) == 0xEF) {
+	uint8_t magic_byte = ((*(uint8_t*)&__magic_ota_byte));
+	printf("magic_byte: %x\r\n", magic_byte);
+	if (magic_byte == 0xCC) {
 		printf("Magic OTA byte detected, sending ACK\r\n");
 		uint8_t tmp = ACK_CODE;
 		lora_transmit(&lora, &tmp, 1);
 		set_ota_state();
-		download_ota_packets();
+		//download_ota_packets();
+		((*(uint8_t*)&__magic_ota_byte)) = 0;
+	}
+	else {
+		printf("No flash_b firmware detected, booting to flash_a\r\n");
 	}
 
 

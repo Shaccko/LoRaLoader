@@ -8,8 +8,8 @@
 #define CHUNK_SIZE 200
 #define CHECKSUM_CODE 0x3
 #define ACK_CODE 0xAC
-#define OTA_BYTE 0xBC
-#define OTA_TX_START 0xCC
+#define OTA_PACKET_BYTE 0xBC
+#define OTA_MAGIC_BYTE 0xCC
 #define PKT_PASS 0xEC
 #define PKT_FAIL 0xF7
 #define PKT_COMPLETE 0xAA

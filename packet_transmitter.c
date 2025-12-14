@@ -21,7 +21,7 @@ static long int get_tick(void) {
 }
 
 void generate_firmware_packet(struct packet* pkt, uint8_t* data_buf, size_t bytes_read) {
-	pkt->header = OTA_BYTE;
+	pkt->header = PACKET_OTA_BYTE;
 	pkt->chunk_size = (uint8_t)bytes_read;
 	pkt->chunk_num = get_chunk_num();
 	memcpy(pkt->data, data_buf, bytes_read);
@@ -54,6 +54,7 @@ uint8_t send_tx_wait_ack(struct lora* lora, uint8_t* tx, size_t tx_len) {
 		lora_transmit(lora, tx, tx_len);
 		do {
 			lora_read_reg(RegIrqFlags, &irq);
+			usleep(1);
 		} while ((irq & 0x40U) == 0 || (get_tick() - ack_timer) > PACKET_TIMEOUT);
 		lora_receive(lora, &rx_buf);
 

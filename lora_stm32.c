@@ -132,7 +132,6 @@ uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
 
 	lora_set_mode(lora, RXCONT);
 
-	printf("Bytes: %d\r\n", num_bytes);
 	return num_bytes;
 }
 

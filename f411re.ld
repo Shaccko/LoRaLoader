@@ -5,7 +5,6 @@ MEMORY {
 	sram(rxw) : ORIGIN = 0x20000000, LENGTH = 128k
 }
 _estack = ORIGIN(sram) + LENGTH(sram);
-_sota_flash = ORIGIN(ota_flash);
 
 SECTIONS {
 	.vectors : { KEEP(*(.vectors*)) } > flash
@@ -35,10 +34,10 @@ SECTIONS {
 		_ebss = .;
 	} > sram
 
-	.magic_ota_byte (NOLOAD) : {
-		*(.magic_byte*);
+	.magic_ota_byte 0x20010000(NOLOAD) : {
+		*(.magic_ota_byte*)
 	} > sram
-	__magic_ota_byte = LOADADDR(.magic_ota_byte);
+	__magic_ota_byte = ADDR(.magic_ota_byte);
 
 	. = ALIGN(8);
 	_end = .;

@@ -36,13 +36,12 @@ void clear_flash_sectors(uint8_t sectors) {
  * Wait for BSY to clear
  */
 void write_flash_b(struct ota_pkt* ota_pkt) {
-	extern uint32_t _sota_flash;
-	struct flash* flash = FLASH;
+	extern uint32_t __sota_flash;
 
 	unlock_flash();
-	while (flash ->SR & BIT(16));
+	while (FLASH->SR & BIT(16));
 	size_t i;
-	uint32_t* sota_flash = (uint32_t*)&_sota_flash;
+	uint32_t* sota_flash = (uint32_t*)&__sota_flash;
 	uint32_t chunk_word = 0;
 	/* Maybe transmitter could send words instead of single bytes */
 	/* Write words to Flash B region */
@@ -53,6 +52,6 @@ void write_flash_b(struct ota_pkt* ota_pkt) {
 			((uint32_t) ota_pkt->chunk_data[word + 3U] << 0);
 		*(sota_flash + word) = chunk_word;
 	}
-	while (flash ->SR & BIT(16));
+	while (FLASH->SR & BIT(16));
 	lock_flash();
 }

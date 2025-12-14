@@ -14,7 +14,10 @@ volatile sig_atomic_t stop = 0;
 struct lora lora;
 uint8_t rx_buf;
 
-static void handle_sigint(int sigint);
+static void handle_sigint(int sig) {
+	(void)sig;
+	stop = 1;
+}
 
 int main() {
 	signal(SIGINT, handle_sigint); 
@@ -43,12 +46,18 @@ int main() {
 	uint32_t total = 0;
 
 	/* Send TX_START ACK */
+	/* Busy poll, we want MCU to reset to bootloader and send an ACK
+	 * that packets are ready to be received */
 	printf("Sending OTA code\n");
-	uint8_t tmp = OTA_TX_START;
-	if (send_tx_wait_ack(&lora, &tmp, 1) != 1) {
-		printf("Error in tx, exiting...\n");
-		return 0;
+	uint8_t tmp = MAGIC_OTA_BYTE;
+	uint8_t irq;
+	lora_transmit(&lora, &tmp, 1);
+	while (rx_buf != 0xCC) {
+		lora_read_reg(RegIrqFlags, &irq);
+		usleep(500 * 1000);
+		if (irq & 0x40U) lora_receive(&lora, &rx_buf);
 	}
+	printf("MCU inside bootloader, sending packets...\n");
 
 	size_t bytes_read;
 	printf("Starting OTA transfer\n");
@@ -86,9 +95,5 @@ int main() {
 	return 0;
 }
 
-static void handle_sigint(int sig) {
-	(void)sig;
-	stop = 1;
-}
 
 

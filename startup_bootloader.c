@@ -15,6 +15,8 @@ extern void _estack(void);
 extern void SysTick_Handler(void);
 
 __attribute__((section(".vectors"))) void (*tab[16 + 91])(void) = {
-	_estack, __bootloader_reset, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SysTick_Handler};
+	_estack, __bootloader_reset, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SysTick_Handler
+};
+
 
 
