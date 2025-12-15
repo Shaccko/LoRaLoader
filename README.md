@@ -17,6 +17,7 @@ instead of dedicating a special region inside SRAM for OTA firmware.
 Super fun project, with a small taste of system on chip programming. 
 
 The programming timeline was as follows:
+
 	- Programming a bootloader starting before main app, properly jumping to app
 	- Figure out how to write RASPI user level drivers
 	- Verify valid SPI signals using my oscilloscope
@@ -90,7 +91,9 @@ number compared on receiver and transmitter, and an ACK is sent back to transmit
 # Project usage
 Actually setting your own firmware to be downloaded is pretty straightforward, make sure 
 the .bin firmware file exists, set its linker for it to be set at 0x0800C000 (sector 3),
-make startup code set vector table to new firmware. To download firmware:
+make startup code set vector table to new firmware. 
+
+	To download firmware:
 	- Flash A must live at 0x08004000
 	- Run ./ota_upload_firmware
 	- Wait for Flash A to receive magic byte
@@ -102,7 +105,8 @@ make startup code set vector table to new firmware. To download firmware:
 	- Bootloader jumps to Flash B if binary file is valid/no corrupted packets.
 
 The pinout structure is again hard defined like previous projects:
-RASPI 4:
+
+	RASPI 4:
 	LoRa pins:
 	Hardware chip select is used instead of user CS.
 	- GPIO 8 (SPI0_CE0_N)
@@ -111,6 +115,7 @@ RASPI 4:
 		was preferred instead.
 
 STM32 F411RE:
+
 	LoRa pins:
 	- #define LORA_PORT 'B'
 	- #define CS_PIN (PIN_NUM(0))
