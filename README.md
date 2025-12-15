@@ -1,4 +1,4 @@
-# LoRa
+# LoRaLoader
 Downloading firmware over-the-air via LoRa
 This project is once again built on top of the Bare Metal Programming Guide for STM32 ARM MCUs
 (https://github.com/cpq/bare-metal-programming-guide)
