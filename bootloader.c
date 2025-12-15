@@ -32,7 +32,6 @@ static void download_ota_packets(void) {
 	while(1) {
 		delay(1); /* Why is this necessary */
 		if (rx_ready && (get_ota_state() == 1)) {
-			printf("Received packet\r\n");
 			uint8_t state = parse_packet_state(rx_buf);
 			lora_transmit(&lora, &state, 1);
 			ack_timeout = (int) get_tick();
@@ -40,7 +39,6 @@ static void download_ota_packets(void) {
 		rx_ready = 0;
 		}
 		if (((int) get_tick() - ack_timeout) > 5000) {
-			printf("Packet reception stalled, clearing sector data...\r\n");
 			kill_ota_firmware();
 			return;
 		}
@@ -78,7 +76,6 @@ static void boot_flash_a(void) {
 		app();
 	}
 	else {
-		printf("Flash A does not exist.\n");
 	}
 
 	/* Run forever */
@@ -117,7 +114,6 @@ static void boot_flash_b(void) {
 		app();
 	}
 	else {
-		printf("Flash B does not exist, trying Flash A.\r\n");
 		boot_flash_a();
 	}
 
@@ -144,14 +140,12 @@ void boot(void) {
 	new_lora(&lora);
 
 	/*--------- Bootloader stuff ----------*/
-	printf("Inside bootloader!\r\n");
+	uart_write_buf(uart2, "Inside bootloader\r\n", 19);
 	lora_set_mode(&lora, RXCONT);
 
 	/* Magic OTA byte exists, expect OTA firmware packets */
 	uint8_t magic_byte = ((*(uint8_t*)&__magic_ota_byte));
-	printf("magic_byte: %x\r\n", magic_byte);
 	if (magic_byte == 0xCC) {
-		printf("Magic OTA byte detected, sending ACK\r\n");
 		uint8_t tmp = ACK_CODE;
 		lora_transmit(&lora, &tmp, 1);
 		kill_ota_firmware();
@@ -163,7 +157,6 @@ void boot(void) {
 		boot_flash_b();
 	}
 	else {
-		printf("No magic byte for Flash B detected, booting from Flash A\r\n");
 		lora_set_mode(&lora, SLEEP);
 		boot_flash_a();
 	}

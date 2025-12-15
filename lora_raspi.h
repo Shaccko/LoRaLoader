@@ -63,7 +63,7 @@
 /* LoRa pins definitions */
 #define LORA_PORT 'B'
 /* Reconfig for raspi */
-#define CS_PIN (PIN_NUM(27))
+#define CS_PIN (PIN_NUM(27)) /* Hardware CS is used instead */
 #define RST_PIN (PIN_NUM(22))
 #define IRQ_PIN (PIN_NUM(23))
 

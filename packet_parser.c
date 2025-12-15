@@ -1,10 +1,10 @@
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 #include <flash.h>
 #include <lora_stm32.h>
 #include <packet_parser.h>
+#include <uart.h>
 
 static uint8_t ota_tx_rdy = 0;
 
@@ -26,14 +26,11 @@ static inline uint8_t validate_packet_checksum(uint8_t* buf, size_t buf_size, ui
 
 static uint8_t validate_packet_received(uint8_t* rx_buf) {
 	if ((rx_buf[1] > CHUNK_SIZE || rx_buf[2] != chunk_num)) {
-			printf("Failed packet size check\r\n");
 			return PKT_FAIL;
 	}
 	if (validate_packet_checksum(&rx_buf[4], (size_t)rx_buf[1], rx_buf[3]) == 0) {
-		printf("Failed checksum check\r\n");
 		return PKT_FAIL;
 	}
-	printf("Passed checks\r\n");
 
 	return PKT_PASS;
 }
@@ -47,18 +44,17 @@ uint8_t parse_packet_state(uint8_t* rx_buf) {
 			pkt_state = ACK_CODE;
 			break;
 		case (OTA_PACKET_BYTE):
-			printf("Received OTA packet\r\n");
 			if (validate_packet_received(rx_buf) == PKT_PASS) {
 				struct ota_pkt out_pkt;
 				out_pkt.chunk_size = rx_buf[1];
 				out_pkt.chunk_num = chunk_num++;
 				memcpy(out_pkt.chunk_data, &rx_buf[4], CHUNK_SIZE);
+				uart_write_buf(uart2, "Writing to Flash B\r\n", 20);
 				write_flash_b(&out_pkt);
 			}
 			pkt_state = PKT_PASS;
 			break;
 		case (PKT_COMPLETE):
-			printf("Last packet received.\r\n");
 			ota_tx_rdy = 0;
 			chunk_num = 1;
 			pkt_state = PKT_COMPLETE;

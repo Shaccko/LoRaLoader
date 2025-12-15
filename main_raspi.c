@@ -19,7 +19,9 @@ static void handle_sigint(int sig) {
 	stop = 1;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+	if (argc == 1) return 0;
+
 	signal(SIGINT, handle_sigint); 
 
 	spidev_init();
@@ -30,7 +32,7 @@ int main() {
 	if (status) printf("lora detected\n");
 	lora_set_mode(&lora, RXCONT);
 
-	FILE *fp = fopen("./ota_firmware/firmware_ota.bin", "rb");
+	FILE *fp = fopen(argv[1], "rb");
 	if (!fp) {
 		perror("fopen failed");
 		return 1;

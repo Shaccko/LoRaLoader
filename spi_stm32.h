@@ -29,7 +29,7 @@
 
 #define SPI1_PORT 'A'
 #define SCK1_PIN (PIN_NUM(5))
-#define NSS1_PIN (PIN_NUM(4))
+#define NSS1_PIN (PIN_NUM(4)) /* Not used */
 #define MOSI1_PIN (PIN_NUM(6))
 #define MISO1_PIN (PIN_NUM(7))
 

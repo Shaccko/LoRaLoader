@@ -9,7 +9,7 @@ int main() {
 	systick_init();
 
 	for(;;) {
-		uart_write_buf(uart2, "New Firmware!", 13);
+		uart_write_buf(uart2, "New Firmware!\r\n", 15);
 		delay(500);
 	}
 

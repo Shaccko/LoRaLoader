@@ -22,11 +22,10 @@ int main() {
 	spi1_init();
 	systick_init();
 
-	printf("Inside main app\r\n");
 
 	uint8_t status = new_lora(&lora);
 	if (status) {
-		printf("lora detected\r\n");
+		uart_write_buf(uart2, "lora detected\r\n", 15);
 	}
 	lora_set_mode(&lora, RXCONT);
 
@@ -34,7 +33,6 @@ int main() {
 		if (rx_ready) {
 			if (rx_buf[0] == OTA_MAGIC_BYTE) {
 				magic_byte = OTA_MAGIC_BYTE;
-				printf("OTA firmware detected, reset MCU to load new firmware.\r\n");
 			}
 			rx_ready = 0;
 		}
