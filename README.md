@@ -4,9 +4,6 @@ Downloading firmware over-the-air via LoRa.
 This project is once again built on top of the Bare Metal Programming Guide for STM32 ARM MCUs
 (https://github.com/cpq/bare-metal-programming-guide)
 
-By Ghanim
-ghanimj@hotmail.com
-
 This is probably my capstone for bare-metal MCU programming. It stemmed
 from the fact that I was not happy with how frightingly little I knew
 about linker scripts, was not happy with just copy pasting what the bare metal guide shows
