@@ -38,7 +38,7 @@ void clear_flash_sectors(uint8_t sectors) {
  * Perform data write ops to desired mem addresses
  * Wait for BSY to clear
  */
-void write_flash_b(struct ota_pkt* ota_pkt) {
+void write_flash_b(uint8_t* bin_data) {
 	extern uint32_t __sota_flash;
 
 	FLASH->CR = 0;
@@ -53,10 +53,10 @@ void write_flash_b(struct ota_pkt* ota_pkt) {
 	static size_t chunk_counter = 0;
 	for (uint32_t word = 0U; word <= CHUNK_SIZE - 4; word = word + 4U) {
 		/* Little endian */
-		uint32_t chunk_word = ((uint32_t) ota_pkt->chunk_data[word + 0U] << 0) |
-			((uint32_t) ota_pkt->chunk_data[word + 1U] << 8) |
-			((uint32_t) ota_pkt->chunk_data[word + 2U] << 16) |
-			((uint32_t) ota_pkt->chunk_data[word + 3U] << 24);
+		uint32_t chunk_word = ((uint32_t) bin_data[word + 0U] << 0) |
+			((uint32_t) bin_data[word + 1U] << 8) |
+			((uint32_t) bin_data[word + 2U] << 16) |
+			((uint32_t) bin_data[word + 3U] << 24);
 		*(sota_flash + chunk_counter) = chunk_word;
 		chunk_counter++; 
 	}

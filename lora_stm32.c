@@ -122,6 +122,7 @@ uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
 	lora_read_reg(lora, RegFifoRxCurrentAddr, &addr);
 	lora_write_reg(lora, RegFifoAddrPtr, addr);
 	lora_read_reg(lora, FifoRxBytesNb, &num_bytes);
+	if (num_bytes == 0) return 0;
 
 	/* Read from FiFo, each consecutive read moves the FiFo
 	 * address ptr up.

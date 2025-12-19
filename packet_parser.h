@@ -14,11 +14,6 @@
 #define PKT_FAIL 0xF7
 #define PKT_COMPLETE 0xAA
 
-
-struct ota_pkt {
-	uint8_t chunk_size, chunk_num, chunk_data[CHUNK_SIZE];
-};
-
 uint8_t parse_packet_state(uint8_t* rx_buf);
 void kill_ota_firmware(void);
 uint8_t get_ota_state(void);

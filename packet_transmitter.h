@@ -18,7 +18,7 @@
 #define CHUNK_SIZE 200
 
 struct packet {
-	uint8_t header, chunk_size, chunk_num, checksum, data[CHUNK_SIZE];
+	uint8_t header, chunk_num, data[CHUNK_SIZE];
 };
 
 uint8_t send_tx_wait_ack(struct lora* lora, uint8_t* tx, size_t tx_len);

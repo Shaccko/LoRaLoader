@@ -78,7 +78,6 @@ int main(int argc, char *argv[]) {
 		else {
 			printf("ACK received, next chunk...\n");
 			total = total + bytes_read;
-			increment_chunk_num();
 		}
 	}
 	printf("File transfer complete");
