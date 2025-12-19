@@ -11,7 +11,7 @@
 #define MAX_CHUNK_SIZE 200
 
 volatile uint8_t rx_ready = 0;
-uint8_t rx_buf[CHUNK_SIZE + 4];
+uint8_t rx_buf[CHUNK_SIZE + 1];
 struct lora lora;
 
 static inline void blink_led(void) {
@@ -22,6 +22,8 @@ static inline void blink_led(void) {
 
 	size_t i;
 	for (i = 0; i < 10; i++) {
+		gpio_write_pin(led_port, led_pin, GPIO_PIN_SET);
+		delay(50);
 		gpio_write_pin(led_port, led_pin, GPIO_PIN_RESET);
 		delay(50);
 	}
@@ -44,84 +46,6 @@ static void download_ota_packets(void) {
 		}
 	}
 }
-
-static void boot_flash_a(void) {
-	extern uint32_t __app_start;
-
-	/* Does code exist? We check this by AND'ing MSP that could 
-	 * *potentially* sit at 0x20020000 of our flash region 
-	 */
-	uint32_t app_flash = (uint32_t)(&__app_start); /* Grab address of app's start symbol from linker */
-	if (((*(uint32_t*) app_flash) & 0x2FFE0000) == 0x20020000) {
-		blink_led();
-
-		/* Disable systick for critical statements */
-		disable_irq();
-		SYSTICK->CTRL = 0;
-		SYSTICK->LOAD = 0;
-		SYSTICK->VAL = 0;
-
-		/* Grab msp (start of app's addr) 
-		 * and reset (+4 from start)
-		 */
-		uint32_t vt_msp = (*(uint32_t*)app_flash);
-		uint32_t reset = (*(uint32_t*)(app_flash + 4));
-		void (*app)(void) = ((void(*)(void)) reset);
-
-		/* Some asm to switch msp from bootloader to main app */
-		__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
-
-		/* Execute _reset of app */
-		enable_irq();
-		app();
-	}
-	else {
-	}
-
-	/* Run forever */
-	for(;;) (void)0;
-}
-
-
-static void boot_flash_b(void) {
-	extern uint32_t __sota_flash;
-
-	uint32_t flash_b = (uint32_t)&__sota_flash;
-	/* Does code exist? We check this by AND'ing MSP that could 
-	 * *potentially* sit at 0x20020000 of our flash region 
-	 */
-	if (((*(uint32_t*) flash_b) & 0x2FFE0000) == 0x20020000) {
-		blink_led();
-
-		/* Disable systick for critical statements */
-		disable_irq();
-		SYSTICK->CTRL = 0;
-		SYSTICK->LOAD = 0;
-		SYSTICK->VAL = 0;
-
-		/* Grab msp (start of app's addr) 
-		 * and reset (+4 from start)
-		 */
-		uint32_t vt_msp = (*(uint32_t*)flash_b);
-		uint32_t reset = (*(uint32_t*)(flash_b + 4));
-		void (*app)(void) = ((void(*)(void)) reset);
-
-		/* Some asm to switch msp from bootloader to main app */
-		__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
-
-		enable_irq();
-		/* Execute _reset of app */
-		app();
-	}
-	else {
-		boot_flash_a();
-	}
-
-	for(;;) (void)0;
-}
-
-
-
 
 /* According to ARM's startup procedure, our SP and vec table 
  * gets fetched from our applications very first address, 
@@ -146,21 +70,40 @@ void boot(void) {
 	/* Magic OTA byte exists, expect OTA firmware packets */
 	uint8_t magic_byte = ((*(uint8_t*)&__magic_ota_byte));
 	if (magic_byte == 0xCC) {
-		uint8_t tmp = ACK_CODE;
-		lora_transmit(&lora, &tmp, 1);
-		kill_ota_firmware();
-		set_ota_state();
-		download_ota_packets();
-		/* Done, reset magic byte */
-		((*(uint8_t*)&__magic_ota_byte)) = 0;
-		/* Attempt boot */
-		boot_flash_b();
 	}
 	else {
-		lora_set_mode(&lora, SLEEP);
-		boot_flash_a();
 	}
 
+	lora_set_mode(&lora, SLEEP);
+	/* Does code exist? We check this by AND'ing MSP that could 
+	 * *potentially* sit at 0x20020000 of our flash region 
+	 */
+	uint32_t app_flash = (uint32_t)(&__app_start); /* Grab address of app's start symbol from linker */
+	if (((*(uint32_t*) app_flash) & 0x2FFE0000) == 0x20020000) {
+
+		blink_led();
+		/* Disable systick for critical statements */
+		disable_irq();
+		SYSTICK->CTRL = 0;
+		SYSTICK->LOAD = 0;
+		SYSTICK->VAL = 0;
+
+		/* Grab msp (start of app's addr) 
+		 * and reset (+4 from start)
+		 */
+		uint32_t vt_msp = (*(uint32_t*)app_flash);
+		uint32_t reset = (*(uint32_t*)(app_flash + 4));
+		void (*app)(void) = ((void(*)(void)) reset);
+
+		/* Some asm to switch msp from bootloader to main app */
+		__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
+
+		/* Execute _reset of app */
+		enable_irq();
+		app();
+	}
+
+	/* Run forever */
 	for(;;) (void)0;
 }
 

@@ -30,13 +30,17 @@ int main() {
 	lora_set_mode(&lora, RXCONT);
 
 	for(;;) {
+		blink_led();
 		if (rx_ready) {
 			if (rx_buf[0] == OTA_MAGIC_BYTE) {
-				magic_byte = OTA_MAGIC_BYTE;
+				uint8_t tmp = OTA_MAGIC_BYTE;
+				lora_transmit(&lora, &tmp, 1);
+			}
+			if (rx_buf[0] == OTA_PACKET_BYTE) {
+				printf("Received\r\n");
 			}
 			rx_ready = 0;
 		}
-		delay(500);
 	}
 }
 

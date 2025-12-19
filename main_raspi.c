@@ -58,8 +58,6 @@ int main(int argc, char *argv[]) {
 	/* lora packets to be sent out */
 	uint8_t buf[CHUNK_SIZE];
 	memset(buf, 0, CHUNK_SIZE);
-
-
 	size_t bytes_read;
 	printf("Starting OTA transfer\n");
 	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
@@ -71,14 +69,8 @@ int main(int argc, char *argv[]) {
 
 		struct packet pkt;
 		generate_firmware_packet(&pkt, buf, bytes_read);
-		if (send_tx_wait_ack(&lora, (uint8_t*)&pkt, CHUNK_SIZE + 4) != 1) {
-			printf("Failed packet transmission, exiting...\n");
-			return 0;
-		}
-		else {
-			printf("ACK received, next chunk...\n");
-			total = total + bytes_read;
-		}
+		lora_transmit(&lora, (uint8_t*)&pkt, CHUNK_SIZE + 1);
+		total = total + bytes_read;
 	}
 	printf("File transfer complete");
 	tmp = PKT_COMPLETE;
