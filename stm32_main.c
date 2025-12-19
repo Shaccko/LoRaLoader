@@ -29,15 +29,20 @@ int main() {
 	}
 	lora_set_mode(&lora, RXCONT);
 
+	uint32_t counter = 0;
+	/* USE FSK FOR PACKETS */
 	for(;;) {
-		blink_led();
+		delay(1);
 		if (rx_ready) {
 			if (rx_buf[0] == OTA_MAGIC_BYTE) {
-				uint8_t tmp = OTA_MAGIC_BYTE;
+				uint8_t tmp = ACK_CODE;
 				lora_transmit(&lora, &tmp, 1);
 			}
 			if (rx_buf[0] == OTA_PACKET_BYTE) {
-				printf("Received\r\n");
+				printf("Received %d\r\n", counter++);
+			}
+			if (rx_buf[0] == PKT_COMPLETE) {
+				counter = 0;
 			}
 			rx_ready = 0;
 		}

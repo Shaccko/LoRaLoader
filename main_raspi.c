@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 	lora_transmit(&lora, &tmp, 1);
 	while (rx_buf != ACK_CODE) {
 		lora_read_reg(RegIrqFlags, &irq);
-		usleep(500 * 1000);
+		usleep(50 * 1000);
 		if (irq & 0x40U) lora_receive(&lora, &rx_buf);
 	}
 	printf("MCU inside bootloader, sending packets...\n");
