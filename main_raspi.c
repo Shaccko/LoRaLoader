@@ -91,14 +91,14 @@ int main() {
 
 	open_spidev();
 	uint8_t status = new_fsk(&fsk);
-	write_reg(RegPacketConfig1, 0x80); /* Fixed length packets */
-	uint16_t max_pkt_length = 500;
+	write_reg(RegPacketConfig1, (uint8_t) (0 << 7U)); /* Fixed length packets */
+	uint16_t max_pkt_length = 2000;
 	write_reg(RegPacketConfig2, (uint8_t) (max_pkt_length >> 8));
 	write_reg(RegPayloadLength, (uint8_t) (max_pkt_length >> 0)); /* Setting fixed packet length to 2000 */
 	if (status) printf("lora detected\n");
 	uint8_t buf[max_pkt_length];
 
-	FILE *fp = fopen("padded.bin", "rb");
+	FILE *fp = fopen("firmware.bin", "rb");
 	if (!fp) {
 		perror("fopen failed");
 		return 1;
@@ -116,4 +116,3 @@ int main() {
 	close_spidev();
 	return 0;
 }
-

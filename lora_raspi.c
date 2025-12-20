@@ -100,7 +100,7 @@ uint8_t new_fsk(struct fsk* fsk) {
 	gpio_raspi_set_mode(fsk->rst_pin|fsk->dio_pin, PIN_OUTPUT);
 	gpio_raspi_write_pin(fsk->rst_pin|fsk->dio_pin, PIN_SET);
 
-	fsk->bitrate = KPBS_300;
+	fsk->bitrate = KPBS_150;
 	fsk->preamb = PREAMB_8;
 	fsk->db_pwr = POWER_20dB;
 	fsk->curr_mode = STDBY;
@@ -110,11 +110,12 @@ uint8_t new_fsk(struct fsk* fsk) {
 	
 	/* Initialize fsk */
 	set_mode(SLEEP);
-	write_reg(RegOpMode, (1 << 5)); /* Set RegOP to fsk mode */
+
+	/* FSK mode is auto set at reset */
+	write_reg(RegOpMode, 0x00U);
 
 	/* Set birate */
-	//fsk_set_bitrate(fsk->bitrate);
-
+	fsk_set_bitrate(fsk->bitrate);
 
 	/* Set Frequency Deviation */
 	fsk_set_fdev(Fdev_50Khz);
@@ -128,7 +129,7 @@ uint8_t new_fsk(struct fsk* fsk) {
 	write_reg(RegGainConfig, fsk->db_pwr);
 
 	/* RegRxBw */
-	write_reg(RegRxBw, 0xB); /* 50KHz */
+	write_reg(RegRxBw, 0x9); /* 200KHz */
 
 	/* OCP */
 	set_ocp();
@@ -158,7 +159,6 @@ uint8_t new_fsk(struct fsk* fsk) {
 }
 
 uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
-	uint8_t reg;
 	uint8_t lora_mode = curr_mode;
 
 	set_mode(STDBY);
@@ -166,6 +166,13 @@ uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 	/* Set FiFo ptr to TxAddr ptr */
 	lora_burstwrite(msg, msg_len); 
 	set_mode(FSTX); /* Write to FiFo and Transmit */
+	set_mode(TX); /* Write to FiFo and Transmit */
+
+	uint8_t reg;
+	do {
+		read_reg(RegIrqFlags2, &reg);
+		usleep(1*1000);
+	} while ((reg & 0x0FU) == 1);
 
 	set_mode(lora_mode);
 
@@ -317,7 +324,7 @@ void lora_burstwrite(uint8_t* payload, size_t payload_len) {
 	 */
 	/* if (payload_len > 33) return; */
 
-	uint8_t reg[payload_len];
+	uint8_t reg[payload_len + 1];
 	size_t reg_len = payload_len + 1;
 	reg[0] = 0x80 | RegFifo;
 	memcpy(&reg[1], payload, payload_len);

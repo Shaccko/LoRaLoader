@@ -13,7 +13,7 @@
 #define RegBitrateLsb 0x03
 /* kpbs */
 #define KPBS_50  (0x80 | 0x00)
-#define KPBS_150 (0x00 | 0xD5)
+#define KPBS_150 (0x00 | 0xD0)
 #define KPBS_300 (0x00 | 0x6B)
 
 /* FSK PaRamp Reg */
