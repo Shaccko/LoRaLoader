@@ -37,12 +37,12 @@ uint8_t send_tx_wait_ack(struct lora* lora, uint8_t* tx, size_t tx_len) {
 		}
 
 		printf("Sent transmission\n");
-		lora_transmit(lora, tx, tx_len);
+		//lora_transmit(lora, tx, tx_len);
 		do {
-			lora_read_reg(RegIrqFlags, &irq);
+			read_reg(RegIrqFlags, &irq);
 			usleep(1);
 		} while ((irq & 0x40U) == 0 || (get_tick() - ack_timer) > 2000);
-		lora_receive(lora, &rx_buf);
+		//lora_receive(lora, &rx_buf);
 
 		if (rx_buf == ACK_CODE || rx_buf == PKT_PASS || rx_buf == PKT_COMPLETE) {
 			ack_status = 1;

@@ -11,7 +11,7 @@
 
 volatile sig_atomic_t stop = 0;
 
-struct lora lora;
+struct fsk fsk;
 uint8_t rx_buf;
 
 static void handle_sigint(int sig) {
@@ -28,9 +28,9 @@ int main(int argc, char *argv[]) {
 	gpio_alloc();
 
 	open_spidev();
-	uint8_t status = new_lora(&lora);
+	uint8_t status = new_fsk(&fsk);
 	if (status) printf("lora detected\n");
-	lora_set_mode(&lora, RXCONT);
+	set_mode(RXCONT);
 
 	FILE *fp = fopen(argv[1], "rb");
 	if (!fp) {
@@ -47,11 +47,11 @@ int main(int argc, char *argv[]) {
 	printf("Sending OTA code\n");
 	uint8_t tmp = MAGIC_OTA_BYTE;
 	uint8_t irq;
-	lora_transmit(&lora, &tmp, 1);
+	//lora_transmit(&lora, &tmp, 1);
 	while (rx_buf != ACK_CODE) {
-		lora_read_reg(RegIrqFlags, &irq);
+		read_reg(RegIrqFlags, &irq);
 		usleep(50 * 1000);
-		if (irq & 0x40U) lora_receive(&lora, &rx_buf);
+		//if (irq & 0x40U) lora_receive(&lora, &rx_buf);
 	}
 	printf("MCU inside bootloader, sending packets...\n");
 
@@ -69,14 +69,14 @@ int main(int argc, char *argv[]) {
 
 		struct packet pkt;
 		generate_firmware_packet(&pkt, buf, bytes_read);
-		lora_transmit(&lora, (uint8_t*)&pkt, CHUNK_SIZE + 1);
+		//lora_transmit(&lora, (uint8_t*)&pkt, CHUNK_SIZE + 1);
 		total = total + bytes_read;
 	}
 	printf("File transfer complete");
 	tmp = PKT_COMPLETE;
-	lora_transmit(&lora, &tmp, 1);
+	//lora_transmit(&lora, &tmp, 1);
 	
-	lora_set_mode(&lora, SLEEP); /* Finished lora operations. */
+	set_mode(SLEEP); /* Finished lora operations. */
 
 	printf("Total bytes on raspi: %d\n", total);
 

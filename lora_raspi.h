@@ -8,6 +8,26 @@
 #define RegFifo 0x00
 #define RegOpMode 0x01
 
+/* FSK BitRate Regs */
+#define RegBitrateMsb 0x02
+#define RegBitrateLsb 0x03
+/* kpbs */
+#define KPBS_50  (0x80 | 0x00)
+#define KPBS_150 (0x00 | 0xD5)
+#define KPBS_300 (0x00 | 0x6B)
+
+/* FSK PaRamp Reg */
+#define RegPaRamp 0x0A
+#define us_10 0x10
+
+/* RegRxBw */
+#define RegRxBw 0x12
+
+/* FSK Frequency Deviation Reg */
+#define RegFdevMsb 0x04
+#define RegFdevLsb 0x05
+#define Fdev_50Khz 0x19A
+
 /* FiFo Addr Registers */
 #define RegFifoAddrPtr 0x0D
 #define RegFifoTxBaseAddr 0x0E
@@ -36,6 +56,9 @@
 /* Gain Power Register */
 #define RegGainConfig 0x09
 
+/* Modulation shape */
+#define ModulationShaping 0x0A
+
 /* OCP Register */
 #define RegOCP 0x0B
 /* LNA Register */
@@ -53,6 +76,16 @@
 /* Preamble Register */
 #define RegPreambleMsb 0x20
 #define RegPreambleLsb 0x21
+
+/* RegPacketConfig */
+#define RegPacketConfig 0x30
+#define RegPacketConfig2 0x31
+
+/* RegFifoThresh */
+#define RegFifoThresh 0x35
+
+/* FSK RegIrqFlags2 */
+#define RegIrqFlags2 0x3F
 
 /* DIOx Mapping Registers */
 #define RegDioMapping1 0x40
@@ -96,17 +129,29 @@ struct lora {
 	uint8_t sf, bw, code_rate, preamb, db_pwr, curr_mode;
 };
 
+struct fsk {
+	uint8_t fsk_port;
+	uint32_t cs_pin, rst_pin, dio_pin;
+	struct spi* lspi;
+
+	uint16_t bitrate;
+	uint8_t ocp, preamb, db_pwr, curr_mode;
+};
+
 uint8_t new_lora(struct lora* lora);
-void lora_set_mode(struct lora* lora, uint8_t mode);
-void lora_set_modemconfig2(uint8_t sf);
-void lora_set_modemconfig1(uint8_t bw, uint8_t code_rate);
-void lora_set_lnahigh(void);
-void lora_set_ocp(void);
-void lora_set_freq(uint32_t freq);
-uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len);
-uint8_t lora_receive(struct lora* lora, uint8_t* buf);
+uint8_t new_fsk(struct fsk* fsk);
+void set_mode(uint8_t mode);
+void set_modemconfig2(uint8_t sf);
+void set_modemconfig1(uint8_t bw, uint8_t code_rate);
+void set_lnahigh(void);
+void set_ocp(void);
+void set_freq(uint32_t freq);
+void fsk_set_bitrate(uint16_t bitrate);
+void fsk_set_fdev(uint16_t fdev);
+uint8_t lora_transmit(uint8_t* msg, size_t msg_len);
+uint8_t lora_receive(uint8_t* buf);
 void lora_burstwrite(uint8_t* payload, size_t payload_len);
-void lora_write_reg(uint8_t addr, uint8_t val);
-void lora_read_reg(uint8_t addr, uint8_t* out);
+void write_reg(uint8_t addr, uint8_t val);
+void read_reg(uint8_t addr, uint8_t* out);
 
 #endif
