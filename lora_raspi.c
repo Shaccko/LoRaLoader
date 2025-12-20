@@ -100,7 +100,7 @@ uint8_t new_fsk(struct fsk* fsk) {
 	gpio_raspi_set_mode(fsk->rst_pin|fsk->dio_pin, PIN_OUTPUT);
 	gpio_raspi_write_pin(fsk->rst_pin|fsk->dio_pin, PIN_SET);
 
-	fsk->bitrate = KPBS_50;
+	fsk->bitrate = KPBS_300;
 	fsk->preamb = PREAMB_8;
 	fsk->db_pwr = POWER_20dB;
 	fsk->curr_mode = STDBY;
@@ -113,7 +113,7 @@ uint8_t new_fsk(struct fsk* fsk) {
 	write_reg(RegOpMode, (1 << 5)); /* Set RegOP to fsk mode */
 
 	/* Set birate */
-	fsk_set_bitrate(fsk->bitrate);
+	//fsk_set_bitrate(fsk->bitrate);
 
 
 	/* Set Frequency Deviation */
@@ -155,6 +155,21 @@ uint8_t new_fsk(struct fsk* fsk) {
 	/* We expect it to return 0x12, according to register datasheet */
 
 	return lora_version == 0x12 ? OK : FAIL;
+}
+
+uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
+	uint8_t reg;
+	uint8_t lora_mode = curr_mode;
+
+	set_mode(STDBY);
+
+	/* Set FiFo ptr to TxAddr ptr */
+	lora_burstwrite(msg, msg_len); 
+	set_mode(FSTX); /* Write to FiFo and Transmit */
+
+	set_mode(lora_mode);
+
+	return OK;
 }
 
 uint8_t lora_transmit(uint8_t* msg, size_t msg_len) {
@@ -271,17 +286,17 @@ void set_freq(uint32_t freq) {
 void fsk_set_bitrate(uint16_t bitrate) {
 	uint8_t reg_data; 
 
-	reg_data = (uint8_t) (bitrate << 8);
+	reg_data = (uint8_t) (bitrate >> 8);
 	write_reg(RegBitrateMsb, reg_data);
-	reg_data = (uint8_t) (bitrate << 0);
+	reg_data = (uint8_t) (bitrate >> 0);
 	write_reg(RegBitrateLsb, reg_data);
 }
 
 void fsk_set_fdev(uint16_t fdev) {
 	uint8_t reg_data;
-	reg_data = (uint8_t) (fdev << 8);
+	reg_data = (uint8_t) (fdev >> 8);
 	write_reg(RegFdevMsb, reg_data);
-	reg_data = (uint8_t) (fdev << 0);
+	reg_data = (uint8_t) (fdev >> 0);
 	write_reg(RegFdevLsb, reg_data);
 }
 

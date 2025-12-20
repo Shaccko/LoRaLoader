@@ -19,7 +19,7 @@ static void handle_sigint(int sig) {
 	stop = 1;
 }
 
-int main(int argc, char *argv[]) {
+int not_in_use(int argc, char *argv[]) {
 	if (argc == 1) return 0;
 
 	signal(SIGINT, handle_sigint); 
@@ -85,5 +85,35 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
+int main() {
+	spidev_init();
+	gpio_alloc();
 
+	open_spidev();
+	uint8_t status = new_fsk(&fsk);
+	write_reg(RegPacketConfig1, 0x80); /* Fixed length packets */
+	uint16_t max_pkt_length = 500;
+	write_reg(RegPacketConfig2, (uint8_t) (max_pkt_length >> 8));
+	write_reg(RegPayloadLength, (uint8_t) (max_pkt_length >> 0)); /* Setting fixed packet length to 2000 */
+	if (status) printf("lora detected\n");
+	uint8_t buf[max_pkt_length];
+
+	FILE *fp = fopen("padded.bin", "rb");
+	if (!fp) {
+		perror("fopen failed");
+		return 1;
+	}
+	memset(buf, 0xA, max_pkt_length);
+
+
+	size_t bytes_read = 0;
+	while ((bytes_read = fread(buf, 1, max_pkt_length, fp)) > 0) {
+		fsk_transmit(buf, max_pkt_length);
+	}
+
+	set_mode(SLEEP); /* Finished lora operations. */
+
+	close_spidev();
+	return 0;
+}
 

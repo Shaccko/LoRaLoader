@@ -81,6 +81,9 @@
 #define RegPacketConfig 0x30
 #define RegPacketConfig2 0x31
 
+/* FSK Payload Length Reg */
+#define RegPayloadLength 0x32
+
 /* RegFifoThresh */
 #define RegFifoThresh 0x35
 
@@ -150,6 +153,7 @@ void fsk_set_bitrate(uint16_t bitrate);
 void fsk_set_fdev(uint16_t fdev);
 uint8_t lora_transmit(uint8_t* msg, size_t msg_len);
 uint8_t lora_receive(uint8_t* buf);
+uint8_t fsk_transmit(uint8_t* msg, size_t msg_len);
 void lora_burstwrite(uint8_t* payload, size_t payload_len);
 void write_reg(uint8_t addr, uint8_t val);
 void read_reg(uint8_t addr, uint8_t* out);
