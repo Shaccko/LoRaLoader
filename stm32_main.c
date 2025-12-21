@@ -33,6 +33,7 @@ int main() {
 		if (rx_ready) {
 			if (rx_buf[0] == OTA_MAGIC_BYTE) {
 				magic_byte = OTA_MAGIC_BYTE;
+				uart_write_buf(uart2, "Magic byte found, reset to bootloader for update\r\n", 48);
 			}
 			rx_ready = 0;
 		}
