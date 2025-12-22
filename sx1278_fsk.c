@@ -6,6 +6,7 @@
 #include <uart.h>
 #include <exti.h>
 
+static uint8_t curr_mode = 0;
 
 /* Streams msg into Fifo, using FifoThresh.
  * If Fifo empty, start filling fifo with bytes,
@@ -23,124 +24,85 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 
 		memcpy(msg, fifo_buf, chunk);
 		sx1278_burstwrite_fifo(fifo_buf, chunk);
+		total_fifo_size = total_fifo_size - chunk;
 
-		/* Fifo done TX, restart */
+		/* Wait for Fifo to be empty */
 		while ((get_fifo_status()) != FIFO_EMPTY);
 	}
 }
 
+/* Kbp\s presets. These bitrates are only as accurate
+ * as our software allows us to be, taking account of
+ * SPI overhead, preamble, crc, etc. 
+ *
+ * Making sure to follow:
+ * h = (2*fdev)/bitrate, h = modulation index, 1.0 is ideal
+ * RxBw >= 2*(fdev+bitrate)
+ */
 
+/* h = 0.5 */
+void fsk_kbps_fast(void) {
+	if (curr_state != STDBY) sx1278_set_mode(STDBY);
 	
-
-uint8_t lora_transmit(struct lora* lora, uint8_t* msg, size_t msg_len) {
-
-	uint8_t reg;
-	uint8_t lora_mode = lora->curr_mode;
-
-	lora_set_mode(lora, STDBY);
-	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Pre-clear all flags */
-
-	/* Set FiFo ptr to TxAddr ptr */
-	lora_read_reg(lora, RegFifoTxBaseAddr, &reg);
-	lora_write_reg(lora, RegFifoAddrPtr, reg);
-	lora_write_reg(lora, FifoPayloadLength, (uint8_t)msg_len);
-
-	lora_burstwrite(lora, msg, msg_len); 
-	lora_set_mode(lora, TX); /* Write to FiFo and Transmit */
-
-	/* Check and clear Tx flag */
-	lora_write_reg(lora, RegIrqFlags, 0xFFU); /* Write 1 to clear flag */
-	lora_set_mode(lora, lora_mode);
-
-	return OK;
-}
-
-uint8_t lora_receive(struct lora* lora, uint8_t* buf) {
-	uint8_t addr;
-	uint8_t num_bytes;
-
-	lora_set_mode(lora, STDBY);
-
-	/* Clear rx flag */
-	lora_write_reg(lora, RegIrqFlags, 0xFFU);
-
-	/* Set FiFo */
-	lora_read_reg(lora, RegFifoRxCurrentAddr, &addr);
-	lora_write_reg(lora, RegFifoAddrPtr, addr);
-	lora_read_reg(lora, FifoRxBytesNb, &num_bytes);
-	if (num_bytes == 0) return 0;
-
-	/* Read from FiFo, each consecutive read moves the FiFo
-	 * address ptr up.
+	/* Setting a kpbs of 80,
+	 * fdev around 20KHz, 
+	 * RxBw >= 200 
 	 */
-	for (uint8_t i = 0; i < num_bytes; i++) {
-		lora_read_reg(lora, RegFifo, &buf[i]);
-	}
+	uint16_t bitrate = KPBS_80;
+	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
+	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
-	lora_set_mode(lora, RXCONT);
+	uint16_t fdev_reg = 0x148;
+	sx1278_write_reg(RegFdevMsb, fdev_reg >> 8);
+	sx1278_write_reg(RegFdevLsb, fdev_reg >> 0);
 
-	return num_bytes;
+	uint8_t rxbw_reg = 0x9; 
+	sx1278_write_reg(RegBxMant, rxbw_reg);
 }
 
-static inline uint8_t fifo_empty(struct lora* lora) {
-	uint8_t reg;
+/* h = 0.8 */
+void fsk_kbps_mid(void) {
+	if (curr_state != STDBY) sx1278_set_mode(STDBY);
+	
+	/* Setting a kpbs of 50,
+	 * fdev around 20KHz, 
+	 * RxBw >= 150 
+	 */
+	uint16_t bitrate = KPBS_50;
+	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
+	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
-	/* Initial check if FiFo is empty */
-	lora_read_reg(lora, RegOpMode, &reg);
-	reg |= 0x40U;
-	lora_write_reg(lora, RegOpMode, reg);
-	lora_read_reg(lora, FSKIrqFlags2, &reg); /* Access FiFoEmpty */
-	if (!reg) return FAIL;
-	reg &= (uint8_t)(~(0x40U));
-	lora_write_reg(lora, RegOpMode, reg); /* Reset back to lora registers */
+	uint16_t fdev_reg = 0x143;
+	sx1278_write_reg(RegFdevMsb, fdev_reg >> 8);
+	sx1278_write_reg(RegFdevLsb, fdev_reg >> 0);
 
-	return OK;
+	uint8_t rxbw_reg = 0x11; 
+	sx1278_write_reg(RegBxMant, rxbw_reg);
 }
 
+/* h = 1.0 */
+void fsk_kbps_slow(void) {
+	if (curr_state != STDBY) sx1278_set_mode(STDBY);
+	
+	/* Setting a kpbs of 10,
+	 * fdev around 5KHz, 
+	 * RxBw >= 30 
+	 */
+	uint16_t bitrate = KPBS_10;
+	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
+	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
-void lora_set_modemconfig2(struct lora* lora, uint8_t sf) {
-	uint8_t reg_val;
-	uint8_t read;
+	uint16_t fdev_reg = 0xA3;
+	sx1278_write_reg(RegFdevMsb, fdev_reg >> 8);
+	sx1278_write_reg(RegFdevLsb, fdev_reg >> 0);
 
-	lora_read_reg(lora, RegModemConfig2, &read);
-	//reg_val = (read | ((uint8_t) (sf << 4U)) | 0x05U);
-	reg_val = (read | ((uint8_t) (sf << 4U)) | (0x07U));
-	lora_write_reg(lora, RegModemConfig2, reg_val);
-	lora_write_reg(lora, RegSymbTimeoutLsb, 0xFFU); /* Set LSB TimeOut */
-}
-
-void lora_set_modemconfig1(struct lora* lora, uint8_t bw, uint8_t code_rate) { 
-	/* 4/5 code rate, 125KHz BW, explicit mode */
-	uint8_t reg_val = (uint8_t) (((unsigned)bw << 4U) | ((unsigned)code_rate << 1U) | (0x00U)); /* Thank you C */
-	lora_write_reg(lora, RegModemConfig1, reg_val);
-}
-
-void lora_set_lnahigh(struct lora* lora) {
-	uint8_t reg_val = 0x20 | 0x03; /* 150% LNA, G1 = max gain */
-	lora_write_reg(lora, RegLNA, reg_val);
-}
-
-void lora_set_ocp(struct lora* lora) {
-	uint8_t reg_val = 0x20 | 0x0B; /* Sets OCP, default set to lmax = 100ma */
-	lora_write_reg(lora, RegOCP, reg_val);
-}
-
-void lora_set_freq(struct lora* lora, uint32_t freq) {
-	uint8_t reg_data;
-	uint32_t new_freq = ((freq * (1U << 19U)) >> 5U); /* freq * 2^19 / 2^5 */
-
-	reg_data = (uint8_t) (new_freq >> 16U);
-	lora_write_reg(lora, RegFrMsb, reg_data);
-
-	reg_data = (uint8_t) (new_freq >> 8U);
-	lora_write_reg(lora, RegFrMid, reg_data);
-
-	reg_data = (uint8_t) (new_freq >> 0);
-	lora_write_reg(lora, RegFrLsb, reg_data);
-}
+	uint8_t rxbw_reg = 0x4; 
+	sx1278_write_reg(RegBxMant, rxbw_reg);
 
 
-void lora_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
+void sx1278_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
+	if (curr_state != STDBY) sx1278_set_mode(STDBY);
+
 	uint8_t reg[2];
 	static const size_t reg_len = 2;
 
@@ -152,12 +114,14 @@ void lora_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
 	gpio_write_pin(LORA_PORT, CS_PIN, GPIO_PIN_SET);
 }
 
-void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
+void sx1278_burstwrite_fifo(struct lora* lora, uint8_t* payload, size_t payload_len) {
 	/* This line will be kept as memorabilia, as it alone
 	 * was the cause of a day of debugging why my payloads
 	 * were not being received properly. 
 	 */
 	/* if (payload_len > 33) return; */
+
+	if (curr_state != STDBY) sx1278_set_mode(STDBY);
 
 	uint8_t reg[32];
 	size_t reg_len = payload_len + 1;
@@ -170,7 +134,9 @@ void lora_burstwrite(struct lora* lora, uint8_t* payload, size_t payload_len) {
 }
 
 
-void lora_read_reg(struct lora* lora, uint8_t addr, uint8_t* out) {
+void sx1278_read_reg(struct lora* lora, uint8_t addr, uint8_t* out) {
+	if (curr_state != STDBY) sx1278_set_mode(STDBY);
+
 	uint8_t reg[2];
 	uint8_t rx_buf[2];
 	static const size_t reg_len = 2;
@@ -185,7 +151,7 @@ void lora_read_reg(struct lora* lora, uint8_t addr, uint8_t* out) {
 	*out = rx_buf[1];
 }
 
-void lora_set_mode(struct lora* lora, uint8_t mode) {
+void sx1278_set_mode(struct lora* lora, uint8_t mode) {
 	uint8_t curr_op = 0;
 
 	lora_read_reg(lora, RegOpMode, &curr_op);
