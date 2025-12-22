@@ -2,9 +2,9 @@
 #include <string.h>
 
 #include <flash.h>
-#include <lora_stm32.h>
 #include <packet_parser.h>
 #include <uart.h>
+#include <sx1278_fsk.h>
 
 static uint8_t ota_tx_rdy = 0;
 

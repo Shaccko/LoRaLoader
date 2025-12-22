@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-#include <lora_stm32.h>
-
 #define CHUNK_SIZE 200
 #define CHECKSUM_CODE 0x3
 #define ACK_CODE 0xAC

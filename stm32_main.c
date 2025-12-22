@@ -21,12 +21,12 @@ int main() {
 	spi1_init();
 	systick_init();
 
-	uint32_t counter = 0;
+	init_fsk();
+
 	/* USE FSK FOR PACKETS */
 	for(;;) {
-		delay(1);
-		if (rx_ready) {
-		}
+		fsk_transmit((uint8_t*) "Hello", 5);
+		delay(1000);
 	}
 }
 

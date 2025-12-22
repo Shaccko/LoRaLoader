@@ -2,6 +2,7 @@
 
 #include <hal.h>
 
+/* Max FIFO Length */
 #define FIFO_CHUNK 64
 
 /* FiFo buffer and OP modes */
@@ -18,12 +19,21 @@
 #define KBPS_100 (0x01 | 0x40)
 #define KPBS_150 (0x00 | 0xD0)
 
+/* Frequency Deviation Reg */
+#define RegFdevMsb 0x04
+#define RegFdevLsb 0x05
+
+/* Receiver BW Reg */
+#define RegRxBw 0x12
+
 /* Packet Config Registers */
 #define RegSyncConfig 0x27
 #define RegPacketConfig1 0x30
+#define RegPacketConfig2 0x31
+#define RegPayloadLength 0x32
 
 /* FSK IRQ Registers */
-#define FSKIrqFlags2 0x3F
+#define RegIrqFlags2 0x3F
 
 /* Frequency Registers */
 #define RegFrMsb 0x06
@@ -88,15 +98,12 @@ enum {
 
 uint8_t init_fsk(void);
 uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len);
+uint8_t fsk_transmit(uint8_t* msg, size_t msg_len);
 
-void fsk_kbps_fast(void);
-void fsk_kbps_mid(void);
-void fsk_kbps_slow(void);
-void sx1278_write_reg(struct lora* lora, uint8_t addr, uint8_t val);
-void sx1278_read_reg(struct lora* lora, uint8_t addr, uint8_t* out);
-void sx1278_burstwrite_fifo(struct lora* lora, uint8_t* payload, size_t payload_len);
+void sx1278_write_reg(uint8_t addr, uint8_t val);
+void sx1278_read_reg(uint8_t addr, uint8_t* out);
+void sx1278_burstwrite_fifo(uint8_t* payload, size_t payload_len);
 void sx1278_set_mode(uint8_t mode);
-
 
 
 
