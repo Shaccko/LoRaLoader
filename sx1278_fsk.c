@@ -16,15 +16,17 @@ static inline void fsk_set_payload_len(uint16_t payload_len);
 static inline void fsk_kbps_fast(void);
 static inline void fsk_kbps_mid(void);
 static inline void fsk_kbps_slow(void);
+static void chip_reset();
 
 uint8_t init_fsk(void) {
 	chip_spi = spi1;
 
+	chip_reset();
+
+	sx1278_set_mode(SLEEP);	
+
 	/* Pin Configs */
 	sx1278_set_fsk_pins();
-
-	curr_mode = SLEEP;
-	sx1278_set_mode(SLEEP);	
 
 	/* FSK Configs */
 	sx1278_set_fsk_configs();
@@ -32,7 +34,6 @@ uint8_t init_fsk(void) {
 
 	/* Set DIO here */
 
-	curr_mode = STDBY;
 	sx1278_set_mode(STDBY);	
 
 	uint8_t chip_version;
@@ -51,7 +52,6 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 	 * FIFO >= FifoThresh + 1
 	 */
 	sx1278_write_reg(RegFifoThresh, 0x3F); /* Start cond at 0 */
-	curr_mode = STDBY;
 	sx1278_set_mode(STDBY);	
 	fsk_set_payload_len((uint16_t) (msg_len));
 
@@ -64,9 +64,10 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 		uint16_t chunk = (uint16_t) ((total_fifo_size > FIFO_CHUNK) ?
 				FIFO_CHUNK : total_fifo_size);
 
-		memcpy(msg, fifo_buf, chunk);
+		memcpy(fifo_buf, msg, chunk);
 		sx1278_burstwrite_fifo(fifo_buf, chunk);
 		total_fifo_size = total_fifo_size - chunk;
+		msg = msg + chunk; /* Advancing ptr */
 
 		/* Wait for Fifo to be empty */
 		if (wait_irq_flag(FIFO_EMPTY) == 0) {
@@ -80,7 +81,6 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 		return FAIL;
 	}
 
-	curr_mode = STDBY;
 	sx1278_set_mode(STDBY);	
 
 	return OK;
@@ -91,35 +91,34 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 	if (msg_len > 64) return FAIL;
 
-	/* Change packet format to variable */
-	uint8_t reg_data;
-	sx1278_read_reg(RegPacketConfig1, &reg_data);
-	reg_data |= (1U << 7U);
-	sx1278_write_reg(RegPacketConfig1, reg_data);
-
-	curr_mode = STDBY;
+	/* Change packet format to variable 
+	 * Set TxStartCondition to FifoEmpty */
 	sx1278_set_mode(STDBY);	
 
+	uint8_t reg_data;
+	sx1278_write_reg(RegPacketConfig1, 0x90);
+	sx1278_write_reg(RegFifoThresh, 0x80); /* Start cond at 0 */
+
+
+	uint8_t reg;
+	sx1278_read_reg(RegPacketConfig1, &reg);
 	uint8_t fifo_buf[64];
-	fifo_buf[0] = (uint8_t) msg_len;
-	memcpy(&fifo_buf[1], msg, msg_len);
+	memcpy(fifo_buf, msg, msg_len);
 	sx1278_burstwrite_fifo(fifo_buf, msg_len);
 	sx1278_set_mode(TX);
+
 
 	/* Wait for TX to finish */
 	if (wait_irq_flag(PACKET_SENT) == 0) {
 		return FAIL;
 	}
 
-	curr_mode = STDBY;
 	sx1278_set_mode(STDBY);	
 
 	return OK;
 }
 /* LNA Gain, PaRamp and Power Gain */
 static inline void sx1278_set_fsk_configs(void) {
-	if (curr_mode != STDBY || curr_mode != SLEEP) sx1278_set_mode(STDBY);
-
 	sx1278_write_reg(RegGainConfig, POWER_20dB);
 	sx1278_write_reg(RegLNA, 0x23);
 	sx1278_write_reg(RegPaRamp, 0xF);
@@ -138,7 +137,7 @@ static inline void fsk_set_payload_len(uint16_t payload_len) {
 	uint8_t reg_data;
 
 	sx1278_read_reg(RegPacketConfig2, &reg_data);
-	reg_data |= (uint8_t) (payload_len >> 8);
+	reg_data |= (uint8_t) (payload_len >> 9);
 	sx1278_write_reg(RegPacketConfig2, reg_data);
 	sx1278_write_reg(RegPayloadLength, (uint8_t) (payload_len >> 0));
 }
@@ -146,7 +145,7 @@ static inline void fsk_set_payload_len(uint16_t payload_len) {
 static uint8_t wait_irq_flag(uint8_t flag_code) {
 	uint8_t flag_reg = 0;
 	uint32_t timeout = get_tick();
-	while ((flag_reg & flag_code) != 1) {
+	while ((flag_reg & flag_code) == 0) {
 		sx1278_read_reg(RegIrqFlags2, &flag_reg);
 		if ((get_tick() - timeout) > 5000) {
 			return 0;
@@ -166,8 +165,6 @@ static uint8_t wait_irq_flag(uint8_t flag_code) {
 
 /* h = 0.5 */
 static inline void fsk_kbps_fast(void) {
-	if (curr_mode != STDBY || curr_mode != SLEEP) sx1278_set_mode(STDBY);
-	
 	/* Setting a kpbs of 80,
 	 * fdev around 20KHz, 
 	 * RxBw >= 200 
@@ -188,8 +185,6 @@ static inline void fsk_kbps_fast(void) {
 
 /* h = 0.8 */
 static inline void fsk_kbps_mid(void) {
-	if (curr_mode != STDBY || curr_mode != SLEEP) sx1278_set_mode(STDBY);
-	
 	/* Setting a kpbs of 50,
 	 * fdev around 20KHz, 
 	 * RxBw >= 150 
@@ -210,8 +205,6 @@ static inline void fsk_kbps_mid(void) {
 
 /* h = 1.0 */
 static inline void fsk_kbps_slow(void) {
-	if (curr_mode != STDBY || curr_mode != SLEEP) sx1278_set_mode(STDBY);
-	
 	/* Setting a kpbs of 10,
 	 * fdev around 5KHz, 
 	 * RxBw >= 30 
@@ -231,8 +224,6 @@ static inline void fsk_kbps_slow(void) {
 }
 
 void sx1278_write_reg(uint8_t addr, uint8_t val) {
-	if (curr_mode != STDBY || curr_mode != SLEEP) sx1278_set_mode(STDBY);
-
 	uint8_t reg[2];
 	static const size_t reg_len = 2;
 
@@ -245,8 +236,6 @@ void sx1278_write_reg(uint8_t addr, uint8_t val) {
 }
 
 void sx1278_read_reg(uint8_t addr, uint8_t* out) {
-	if (curr_mode != STDBY || curr_mode != SLEEP) sx1278_set_mode(STDBY);
-
 	uint8_t reg[2];
 	uint8_t rx_buf[2];
 	static const size_t reg_len = 2;
@@ -267,13 +256,10 @@ void sx1278_burstwrite_fifo(uint8_t* payload, size_t payload_len) {
 	 * were not being received properly. 
 	 */
 	/* if (payload_len > 33) return; */
-
-	if (curr_mode != STDBY || curr_mode != SLEEP) sx1278_set_mode(STDBY);
-
-	uint8_t reg[32];
 	size_t reg_len = payload_len + 1;
+	uint8_t reg[reg_len];
 	reg[0] = 0x80 | RegFifo;
-	memcpy(&reg[1], payload, payload_len);
+	memcpy(&reg[2], payload, payload_len);
 
 	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_RESET);
 	spi_transmit_receive(chip_spi, reg, (uint8_t*)0, reg_len);
@@ -288,4 +274,11 @@ void sx1278_set_mode(uint8_t mode) {
 
 	sx1278_write_reg(RegOpMode, curr_op);
 	curr_mode = mode;
+}
+
+static void chip_reset() {
+	gpio_write_pin(SX1278_PORT, RST_PIN, GPIO_PIN_RESET);
+	delay(1);
+	gpio_write_pin(SX1278_PORT, RST_PIN, GPIO_PIN_SET);
+	delay(10);
 }

@@ -26,6 +26,7 @@ int main() {
 	/* USE FSK FOR PACKETS */
 	for(;;) {
 		fsk_transmit((uint8_t*) "Hello", 5);
+		printf("Transmitted.\r\n");
 		delay(1000);
 	}
 }

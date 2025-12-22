@@ -58,23 +58,11 @@ void boot(void) {
 	extern uint8_t __magic_ota_byte;
 
 	uart2_init();
-	spi1_init();
 	systick_init();
-
-	new_lora(&lora);
 
 	/*--------- Bootloader stuff ----------*/
 	uart_write_buf(uart2, "Inside bootloader\r\n", 19);
-	lora_set_mode(&lora, RXCONT);
 
-	/* Magic OTA byte exists, expect OTA firmware packets */
-	uint8_t magic_byte = ((*(uint8_t*)&__magic_ota_byte));
-	if (magic_byte == 0xCC) {
-	}
-	else {
-	}
-
-	lora_set_mode(&lora, SLEEP);
 	/* Does code exist? We check this by AND'ing MSP that could 
 	 * *potentially* sit at 0x20020000 of our flash region 
 	 */
