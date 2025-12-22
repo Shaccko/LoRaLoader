@@ -1,25 +1,59 @@
 #include <string.h>
 
-#include <lora_stm32.h>
 #include <hal.h>
+#include <sx1278_fsk.h>
 #include <spi_stm32.h>
 #include <uart.h>
 #include <exti.h>
 
 static uint8_t curr_mode = 0;
+static struct spi* chip_spi = spi1;
+
+static void wait_irq_flag(uint8_t flag_code) {
+
+uint8_t init_fsk(void) {
+	/* Pin Configs */
+	sx1278_set_fsk_pins();
+
+	curr_mode = SLEEP;
+	sx1278_set_mode(SLEEP);	
+
+	/* FSK Configs */
+	sx1278_set_fsk_configs();
+	fsk_kpbs_mid();
+
+	/* Set DIO here */
+
+	curr_mode = STDBY;
+	sx1278_set_mode(STDBY);	
+
+	uint8_t chip_version;
+	sx1278_read_reg(RegVersion, &chip_version);
+
+	return chip_version == 0x12 ? OK : FAIL;
+}
 
 /* Streams msg into Fifo, using FifoThresh.
  * If Fifo empty, start filling fifo with bytes,
  * wait till FifoThresh gets set, repeat.
  */
 uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
-	uint8_t fifo_buf[FIFO_CHUNK];
+	/* FifoThresh, set to 63 since we put 64
+	 * bytes into Fifo, and TX triggers on
+	 * FIFO >= FifoThresh + 1
+	 */
+	sx1278_write_reg(RegFifoThresh, 0x3F); /* Start cond at 0 */
+	curr_mode = STDBY;
+	sx1278_set_mode(STDBY);	
+	fsk_set_payload_len((uint16_t) (msg_len));
+
 
 	sx1278_set_mode(TX);
-
+	uint8_t fifo_buf[FIFO_CHUNK];
 	size_t total_fifo_size = msg_len;
 	while (total_fifo_size > 0) {
-		uint16_t chunk = (total_fifo_size > FIFO_CHUNK ?
+		/* Get 64 or less than 64 depending on which is greater */
+		uint16_t chunk = (total_fifo_size > FIFO_CHUNK) ?
 				FIFO_CHUNK : total_fifo_size;
 
 		memcpy(msg, fifo_buf, chunk);
@@ -27,18 +61,90 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 		total_fifo_size = total_fifo_size - chunk;
 
 		/* Wait for Fifo to be empty */
-		while ((get_fifo_status()) != FIFO_EMPTY); /*Add a timer here */
+		if (wait_irq_flag(FIFO_EMPTY) == 0) {
+			return FAIL
+		}
+			
 	}
+
+	/* Wait for TX to finish */
+	if (wait_irq_flag(PACKET_SENT) == 0) {
+		return FAIL;
+	}
+
+	curr_mode = STDBY;
+	sx1278_set_mode(STDBY);	
 
 	return OK;
 }
 
+/* For less than 64 bytes tranmission, this is preferred */
+
+uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
+	if (msg_len > 64) return;
+
+	/* Change packet format to variable */
+	uint8_t reg_data;
+	sx1278_read_reg(RegPacketConfig1, reg_data);
+	reg_data |= (1U << 7U);
+	sx1278_write_reg(RegPacketConfig1, reg_data);
+
+	curr_mode = STDBY;
+	sx1278_set_mode(STDBY);	
+
+	uint8_t fifo_buf[64];
+	fifo_buf[0] = (uint8_t) msg_len;
+	sx1278_burstwrite_fifo(fifo_buf, msg_len);
+	sx1278_set_mode(TX);
+
+	/* Wait for TX to finish */
+	if (wait_irq_flag(PACKET_SENT) == 0) {
+		return FAIL;
+	}
+
+	curr_mode = STDBY;
+	sx1278_set_mode(STDBY);	
+
+	return OK;
+}
 /* LNA Gain, PaRamp and Power Gain */
-static inline void sx1278_set_configs(void) {
+static inline void sx1278_set_fsk_configs(void) {
+	if (curr_state != STDBY || curr_state != SLEEP) sx1278_set_mode(STDBY);
+
 	sx1278_write_reg(RegGainConfig, POWER_20db);
 	sx1278_write_reg(RegLNA, 0x23);
 	sx1278_write_reg(RegPaRamp, 0xF);
 }	
+
+static inline void sx1278_set_fsk_pins(void) {
+	gpio_set_mode(CS_PIN|RST_PIN, GPIO_MODE_OUTPUT, LORA_PORT);
+	gpio_set_mode(IRQ_PIN, GPIO_MODE_INPUT, LORA_PORT);
+	gpio_set_pupdr(IRQ_PIN, PULL_DOWN, LORA_PORT);
+	gpio_write_pin(SX1278_PORT, CS_PIN|RST_PIN, GPIO_PIN_SET); 
+
+	enable_line_interrupt(IRQ_PIN, LORA_PORT, RISING); /* EXTI Config */
+}
+
+static inline void fsk_set_payload_len(uint16_t payload_len) {
+	uint8_t reg_data;
+
+	sx1278_read_reg(RegPacketConfig2, &reg_data);
+	reg_data |= (uint8_t) (payload_len >> 8);
+	sx1278_write_reg(RegPacketConfig2, reg_data);
+	sx1278_write_reg(RegPayloadLength, (uint8_t) (payload_len >> 0);
+}
+
+static void wait_irq_flag(uint8_t flag_code) {
+	uint8_t flag_reg = 0;
+	uint32_t timeout = get_tick();
+	while ((flag_reg & flag_code) != 1) {
+		sx1278_read_reg(RegIrqFlags2, flag_reg);
+		if ((get_tick() - timeout) > 5000) {
+			return 0;
+		}
+	}
+	return 1;
+}
 
 /* Kbp\s presets. These bitrates are only as accurate
  * as our software allows us to be, taking account of
@@ -51,7 +157,7 @@ static inline void sx1278_set_configs(void) {
 
 /* h = 0.5 */
 void fsk_kbps_fast(void) {
-	if (curr_state != STDBY) sx1278_set_mode(STDBY);
+	if (curr_state != STDBY || curr_state != SLEEP) sx1278_set_mode(STDBY);
 	
 	/* Setting a kpbs of 80,
 	 * fdev around 20KHz, 
@@ -73,7 +179,7 @@ void fsk_kbps_fast(void) {
 
 /* h = 0.8 */
 void fsk_kbps_mid(void) {
-	if (curr_state != STDBY) sx1278_set_mode(STDBY);
+	if (curr_state != STDBY || curr_state != SLEEP) sx1278_set_mode(STDBY);
 	
 	/* Setting a kpbs of 50,
 	 * fdev around 20KHz, 
@@ -95,7 +201,7 @@ void fsk_kbps_mid(void) {
 
 /* h = 1.0 */
 void fsk_kbps_slow(void) {
-	if (curr_state != STDBY) sx1278_set_mode(STDBY);
+	if (curr_state != STDBY || curr_state != SLEEP) sx1278_set_mode(STDBY);
 	
 	/* Setting a kpbs of 10,
 	 * fdev around 5KHz, 
@@ -115,8 +221,8 @@ void fsk_kbps_slow(void) {
 	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
 }
 
-void sx1278_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
-	if (curr_state != STDBY) sx1278_set_mode(STDBY);
+void sx1278_write_reg(uint8_t addr, uint8_t val) {
+	if (curr_state != STDBY || curr_state != SLEEP) sx1278_set_mode(STDBY);
 
 	uint8_t reg[2];
 	static const size_t reg_len = 2;
@@ -125,11 +231,28 @@ void sx1278_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
 	reg[1] = val;
 
 	gpio_write_pin(LORA_PORT, CS_PIN, GPIO_PIN_RESET);
-	spi_transmit_receive(lora->lspi, reg, 0, reg_len);
+	spi_transmit_receive(chip_spi, reg, 0, reg_len);
 	gpio_write_pin(LORA_PORT, CS_PIN, GPIO_PIN_SET);
 }
 
-void sx1278_burstwrite_fifo(struct lora* lora, uint8_t* payload, size_t payload_len) {
+void sx1278_read_reg(uint8_t addr, uint8_t* out) {
+	if (curr_state != STDBY || curr_state != SLEEP) sx1278_set_mode(STDBY);
+
+	uint8_t reg[2];
+	uint8_t rx_buf[2];
+	static const size_t reg_len = 2;
+
+	reg[0] = addr & 0x7F; 
+	reg[1] = 0;
+
+	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_RESET);
+	spi_transmit_receive(chip_spi, reg, rx_buf, reg_len);
+	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_SET);
+	
+	*out = rx_buf[1];
+}
+
+void sx1278_burstwrite_fifo(uint8_t* payload, size_t payload_len) {
 	/* This line will be kept as memorabilia, as it alone
 	 * was the cause of a day of debugging why my payloads
 	 * were not being received properly. 
@@ -143,35 +266,17 @@ void sx1278_burstwrite_fifo(struct lora* lora, uint8_t* payload, size_t payload_
 	reg[0] = 0x80 | RegFifo;
 	memcpy(&reg[1], payload, payload_len);
 
-	gpio_write_pin(lora->lora_port, lora->cs_pin, GPIO_PIN_RESET);
-	spi_transmit_receive(lora->lspi, reg, (uint8_t*)0, reg_len);
-	gpio_write_pin(lora->lora_port, lora->cs_pin, GPIO_PIN_SET);
+	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_RESET);
+	spi_transmit_receive(chip_spi, reg, (uint8_t*)0, reg_len);
+	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_SET);
 }
 
-
-void sx1278_read_reg(struct lora* lora, uint8_t addr, uint8_t* out) {
-	if (curr_state != STDBY) sx1278_set_mode(STDBY);
-
-	uint8_t reg[2];
-	uint8_t rx_buf[2];
-	static const size_t reg_len = 2;
-
-	reg[0] = addr & 0x7F; 
-	reg[1] = 0;
-
-	gpio_write_pin(lora->lora_port, lora->cs_pin, GPIO_PIN_RESET);
-	spi_transmit_receive(lora->lspi, reg, rx_buf, reg_len);
-	gpio_write_pin(lora->lora_port, lora->cs_pin, GPIO_PIN_SET);
-	
-	*out = rx_buf[1];
-}
-
-void sx1278_set_mode(struct lora* lora, uint8_t mode) {
+void sx1278_set_mode(uint8_t mode) {
 	uint8_t curr_op = 0;
 
-	lora_read_reg(lora, RegOpMode, &curr_op);
+	sx1278_read_reg(RegOpMode, &curr_op);
 	curr_op = (uint8_t) ((curr_op & ~7U) | mode); /* Overwrite mode bits */
 
-	lora_write_reg(lora, RegOpMode, curr_op);
-	lora->curr_mode = mode;
+	sx1278_write_reg(RegOpMode, curr_op);
+	curr_mode = mode;
 }

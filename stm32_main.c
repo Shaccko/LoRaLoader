@@ -9,9 +9,8 @@
 #include <spi_stm32.h>
 #include <exti.h>
 #include <packet_parser.h>
-#include <lora_stm32.h>
+#include <sx1278_fsk.h>
 
-struct lora lora;
 uint8_t rx_buf[CHUNK_SIZE + 4]; /* Header + CHUNK_SIZE */
 volatile uint8_t rx_ready = 0;
 
@@ -22,34 +21,16 @@ int main() {
 	spi1_init();
 	systick_init();
 
-
-	uint8_t status = new_lora(&lora);
-	if (status) {
-		uart_write_buf(uart2, "lora detected\r\n", 15);
-	}
-	lora_set_mode(&lora, RXCONT);
-
 	uint32_t counter = 0;
 	/* USE FSK FOR PACKETS */
 	for(;;) {
 		delay(1);
 		if (rx_ready) {
-			if (rx_buf[0] == OTA_MAGIC_BYTE) {
-				uint8_t tmp = ACK_CODE;
-				lora_transmit(&lora, &tmp, 1);
-			}
-			if (rx_buf[0] == OTA_PACKET_BYTE) {
-				printf("Received %d\r\n", counter++);
-			}
-			if (rx_buf[0] == PKT_COMPLETE) {
-				counter = 0;
-			}
-			rx_ready = 0;
 		}
 	}
 }
 
 void lora_rx_irq(void) {
-	lora_receive(&lora, rx_buf);
+	//lora_receive(&lora, rx_buf);
 	rx_ready = 1;
 }

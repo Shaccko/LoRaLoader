@@ -36,9 +36,9 @@
 #define KPBS_50  (0x80 | 0x00)
 #define KPBS_150 (0x00 | 0xD0)
 #define KPBS_300 (0x00 | 0x6B)
+
 /* Ramp Reg */
 #define RegPaRamp 0x0A
-#define us_10 0x10
 
 /* OCP Register */
 #define RegOCP 0x0B
@@ -48,6 +48,9 @@
 /* Preamble Register */
 #define RegPreambleMsb 0x20
 #define RegPreambleLsb 0x21
+
+/* RegFifoThresh reg */
+#define RegFifoThresh 0x35
 
 /* DIOx Mapping Registers */
 #define RegDioMapping1 0x40
@@ -72,4 +75,28 @@
 
 enum { SLEEP, STDBY, FSTX, TX, FSRX, RXCONT, RXSINGLE, CAD };
 
-#endif
+enum {
+	LOW_BAT = 0x00,
+	CRC_OK = 0x01,
+	PAYLOAD_READY = 0x02,
+	PACKET_SENT = 0x04,
+	FIFO_OVERRUN = 0x08,
+	FIFO_LEVEL = 0x10,
+	FIFO_EMPTY = 0x20,
+	FIFO_FULL = 0x40
+};
+
+uint8_t init_fsk(void);
+uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len);
+
+void fsk_kbps_fast(void);
+void fsk_kbps_mid(void);
+void fsk_kbps_slow(void);
+void sx1278_write_reg(struct lora* lora, uint8_t addr, uint8_t val);
+void sx1278_read_reg(struct lora* lora, uint8_t addr, uint8_t* out);
+void sx1278_burstwrite_fifo(struct lora* lora, uint8_t* payload, size_t payload_len);
+void sx1278_set_mode(uint8_t mode);
+
+
+
+
