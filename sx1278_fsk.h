@@ -36,6 +36,9 @@
 #define KPBS_50  (0x80 | 0x00)
 #define KPBS_150 (0x00 | 0xD0)
 #define KPBS_300 (0x00 | 0x6B)
+/* Ramp Reg */
+#define RegPaRamp 0x0A
+#define us_10 0x10
 
 /* OCP Register */
 #define RegOCP 0x0B

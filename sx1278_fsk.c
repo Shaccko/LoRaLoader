@@ -27,9 +27,18 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 		total_fifo_size = total_fifo_size - chunk;
 
 		/* Wait for Fifo to be empty */
-		while ((get_fifo_status()) != FIFO_EMPTY);
+		while ((get_fifo_status()) != FIFO_EMPTY); /*Add a timer here */
 	}
+
+	return OK;
 }
+
+/* LNA Gain, PaRamp and Power Gain */
+static inline void sx1278_set_configs(void) {
+	sx1278_write_reg(RegGainConfig, POWER_20db);
+	sx1278_write_reg(RegLNA, 0x23);
+	sx1278_write_reg(RegPaRamp, 0xF);
+}	
 
 /* Kbp\s presets. These bitrates are only as accurate
  * as our software allows us to be, taking account of
@@ -58,6 +67,8 @@ void fsk_kbps_fast(void) {
 
 	uint8_t rxbw_reg = 0x9; 
 	sx1278_write_reg(RegBxMant, rxbw_reg);
+
+	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
 }
 
 /* h = 0.8 */
@@ -78,6 +89,8 @@ void fsk_kbps_mid(void) {
 
 	uint8_t rxbw_reg = 0x11; 
 	sx1278_write_reg(RegBxMant, rxbw_reg);
+
+	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
 }
 
 /* h = 1.0 */
@@ -99,6 +112,8 @@ void fsk_kbps_slow(void) {
 	uint8_t rxbw_reg = 0x4; 
 	sx1278_write_reg(RegBxMant, rxbw_reg);
 
+	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
+}
 
 void sx1278_write_reg(struct lora* lora, uint8_t addr, uint8_t val) {
 	if (curr_state != STDBY) sx1278_set_mode(STDBY);
