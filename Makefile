@@ -18,16 +18,15 @@ FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c \
 		   syscalls.c spi_stm32.c sx1278_fsk.c exti.c \
 		   packet_parser.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h spi_stm32.h sx1278_fsk.h \
-		  exti.h packet_parser.h sx1278_spi_call.h
+		  exti.h packet_parser.h 
 FIRMWARE_ADDR = 0x08004000
 
 FIRMWARE_OTA_SOURCES = stm32_new_main.c rcc.c startup_f411re.c uart.c
 FIRMWARE_OTA_HEADER = rcc.h hal.h uart.h 
 
 RASPI_SOURCES = main_raspi.c gpio_raspi.c spi_raspi.c \
-		packet_transmitter.c
+		packet_transmitter.c sx1278_fsk.c
 RASPI_HEADERS = gpio_raspi.h spi_raspi.h packet_transmitter.h \
-		sx1278_spi_call.h
 
 ifeq ($(OS),WINDOWS_NT)
 	RM = cmd /C del /Q /F *.elf *~ *.o *.bin ota_upload_raspi

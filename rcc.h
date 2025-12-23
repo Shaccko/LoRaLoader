@@ -27,14 +27,14 @@ struct systick {
 
 void SysTick_Handler(void);
 
-static inline uint32_t get_tick(void) {
+static inline uint32_t get_stm32_tick(void) {
 	return s_ticks;
 }
 
 static inline void delay(uint32_t time) {
-	uint32_t tick_start = get_tick();
+	uint32_t tick_start = get_stm32_tick();
 
-	while (get_tick() - tick_start < time);
+	while (get_stm32_tick() - tick_start < time);
 }
 
 void systick_init(void);

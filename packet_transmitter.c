@@ -6,7 +6,7 @@
 
 #include <packet_transmitter.h>
 
-static long int get_tick(void) {
+long int get_raspi_tick(void) {
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	
@@ -23,13 +23,14 @@ void generate_firmware_packet(struct packet* pkt, uint8_t* data_buf, size_t byte
 	}
 }
 
+/*
 uint8_t send_tx_wait_ack(uint8_t* tx, size_t tx_len) {
 	uint8_t irq, err_count = 0, ack_status = 0;
 	uint8_t rx_buf;
 
 	long int ack_timer;
 	while (ack_status != 1) {
-		ack_timer = get_tick();
+		ack_timer = get_raspi_tick();
 		if (err_count >= 5) {
 			ack_status = 0;
 			break;
@@ -39,7 +40,7 @@ uint8_t send_tx_wait_ack(uint8_t* tx, size_t tx_len) {
 		do {
 			//read_reg(RegIrqFlags, &irq);
 			usleep(1);
-		} while ((irq & 0x40U) == 0 || (get_tick() - ack_timer) > 2000);
+		} while ((irq & 0x40U) == 0 || (get_raspi_tick() - ack_timer) > 2000);
 
 		if (rx_buf == ACK_CODE || rx_buf == PKT_PASS || rx_buf == PKT_COMPLETE) {
 			ack_status = 1;
@@ -51,5 +52,5 @@ uint8_t send_tx_wait_ack(uint8_t* tx, size_t tx_len) {
 
 	return ack_status;
 }
-
+*/
 

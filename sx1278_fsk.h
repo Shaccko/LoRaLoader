@@ -3,7 +3,8 @@
 #include <hal.h>
 
 /* Max FIFO Length */
-#define FIFO_CHUNK 64
+#define MAX_FIFO_CHUNK 64
+#define MAX_FIXED_CHUNK 2047
 
 /* FiFo buffer and OP modes */
 #define RegFifo 0x00
@@ -99,6 +100,9 @@ enum {
 uint8_t init_fsk(void);
 uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len);
 uint8_t fsk_transmit(uint8_t* msg, size_t msg_len);
+uint8_t fsk_receive(uint8_t* rx_buf);
+void fsk_set_thresh(uint8_t thresh);
+void fsk_set_payload_len(uint16_t payload_len);
 
 void sx1278_write_reg(uint8_t addr, uint8_t val);
 void sx1278_read_reg(uint8_t addr, uint8_t* out);

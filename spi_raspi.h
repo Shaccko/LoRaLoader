@@ -10,7 +10,6 @@
 
 int spidev_init(void);
 int spidev_transmit_receive(uint8_t* mosi_buf, uint8_t* miso_buf, size_t mosi_len);
-int open_spidev(void);
 void close_spidev(void);
 
 #endif

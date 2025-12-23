@@ -7,6 +7,7 @@
 #include <gpio_raspi.h>
 #include <spi_raspi.h>
 #include <packet_transmitter.h>
+#include <sx1278_fsk.h>
 
 volatile sig_atomic_t stop = 0;
 
@@ -25,15 +26,26 @@ int main(int argc, char *argv[]) {
 	spidev_init();
 	gpio_alloc();
 
-	open_spidev();
+	if (init_fsk() != 1) {
+		printf("Failed FSK init\n");
+		return 1;
+	}
 
 	FILE *fp = fopen(argv[1], "rb");
 	if (!fp) {
 		perror("fopen failed");
 		return 1;
 	}
+	sx1278_write_reg(RegFifoThresh, 0x1);
+	fsk_set_payload_len(MAX_FIFO_CHUNK);
+	sx1278_set_mode(RXCONT);
 
 	uint8_t buf[CHUNK_SIZE];
+	for (;;) {
+		fsk_receive(buf);
+		printf("Buf: %s\n", buf);
+		usleep(500*1000);
+	}
 	size_t bytes_read;
 	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
 	}

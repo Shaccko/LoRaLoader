@@ -11,6 +11,8 @@
 
 int fd_spi;
 
+static int open_spidev(void);
+
 int spidev_init(void) {
 	/* Coming from a bare-metal stm32 background, apparently
 	 * just enabling peripheral and sending ioctl with our 
@@ -62,7 +64,7 @@ int spidev_transmit_receive(uint8_t* mosi_buf, uint8_t* miso_buf,  size_t mosi_l
 	return 1;
 }
 
-int open_spidev(void) {
+static int open_spidev(void) {
 	fd_spi = open("/dev/spidev0.0", O_RDWR);
 
 	if (fd_spi < 0) return -1;

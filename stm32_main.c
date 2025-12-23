@@ -27,7 +27,7 @@ int main() {
 	for(;;) {
 		fsk_transmit((uint8_t*) "Hello", 5);
 		printf("Transmitted.\r\n");
-		delay(1000);
+		delay(500);
 	}
 }
 

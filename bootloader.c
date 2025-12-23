@@ -33,11 +33,11 @@ static void download_ota_packets(void) {
 		delay(1); /* Why is this necessary */
 		if (rx_ready && (get_ota_state() == 1)) {
 			uint8_t state = parse_packet_state(rx_buf);
-			ack_timeout = (int) get_tick();
+			ack_timeout = (int) get_stm32_tick();
 			if (state == PKT_COMPLETE) return;
 		rx_ready = 0;
 		}
-		if (((int) get_tick() - ack_timeout) > 5000) {
+		if (((int) get_stm32_tick() - ack_timeout) > 5000) {
 			kill_ota_firmware();
 			return;
 		}

@@ -20,6 +20,7 @@ struct packet {
 	uint8_t header, data[CHUNK_SIZE];
 };
 
+long int get_raspi_tick(void);
 uint8_t send_tx_wait_ack(uint8_t* tx, size_t tx_len);
 void generate_firmware_packet(struct packet* pkt, uint8_t* data_buf, size_t bytes_read);
 void increment_chunk_num(void);
