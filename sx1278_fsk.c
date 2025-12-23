@@ -26,9 +26,11 @@ uint8_t init_fsk(void) {
 	/* Pin Configs */
 	sx1278_set_platform_fsk_pins();
 
+	/* Need to mess around with mod index vals, fast is better
+	 * than mid and slow ATM. */
 	/* FSK Configs */
 	sx1278_set_fsk_configs();
-	fsk_kbps_mid();
+	fsk_kbps_fast();
 
 	/* Set DIO here */
 
@@ -126,17 +128,13 @@ uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 }
 
 uint8_t fsk_receive(uint8_t* rx_buf) {
-	print_regs();
-	if (wait_irq_flag(PAYLOAD_READY) == 0) {
-		return FAIL;
-	}
 	uint8_t fifo_len;
 	sx1278_read_reg(RegFifo, &fifo_len);
 	printf("Fifo_len: %x\n", fifo_len);
 	if (fifo_len == 0) return FAIL;
 
 	size_t i;
-	for (i = 1; i < fifo_len + 1; i++) {
+	for (i = 0; i < fifo_len; i++) {
 		sx1278_read_reg(RegFifo, &rx_buf[i]);
 	}
 
@@ -174,9 +172,8 @@ void fsk_set_payload_len(uint16_t payload_len) {
 static uint8_t wait_irq_flag(uint8_t flag_code) {
 	uint8_t flag_reg = 0;
 	uint32_t timeout = get_platform_tick_call();
-	while ((flag_reg & flag_code) == 0 
-			|| (get_platform_tick() - timeout) > 5000) {
-		printf("irq_flags: %x\n", flag_reg);
+	while ((flag_reg & flag_code) == 0) {
+		if ((get_platform_tick_call() - timeout) > 5000) return 0;
 		sx1278_read_reg(RegIrqFlags2, &flag_reg);
 	}
 	return 1;
@@ -195,7 +192,7 @@ static uint8_t wait_irq_flag(uint8_t flag_code) {
 static inline void fsk_kbps_fast(void) {
 	/* Setting a kpbs of 80,
 	 * fdev around 20KHz, 
-	 * RxBw >= 200 
+	 * RxBw >= 
 	 */
 	uint16_t bitrate = KPBS_80;
 	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
@@ -205,7 +202,7 @@ static inline void fsk_kbps_fast(void) {
 	sx1278_write_reg(RegFdevMsb, (uint8_t) (fdev_reg >> 8));
 	sx1278_write_reg(RegFdevLsb, (uint8_t) (fdev_reg >> 0));
 
-	uint8_t rxbw_reg = 0x9; 
+	uint8_t rxbw_reg = 0x1; /* 250 RxBw */
 	sx1278_write_reg(RegRxBw, rxbw_reg);
 
 	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
@@ -225,7 +222,7 @@ static inline void fsk_kbps_mid(void) {
 	sx1278_write_reg(RegFdevMsb, (uint8_t) (fdev_reg >> 8));
 	sx1278_write_reg(RegFdevLsb, (uint8_t) (fdev_reg >> 0));
 
-	uint8_t rxbw_reg = 0x11; 
+	uint8_t rxbw_reg = 0x9; /* 200 RxBw */
 	sx1278_write_reg(RegRxBw, rxbw_reg);
 
 	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
@@ -234,18 +231,18 @@ static inline void fsk_kbps_mid(void) {
 /* h = 1.0 */
 static inline void fsk_kbps_slow(void) {
 	/* Setting a kpbs of 10,
-	 * fdev around 5KHz, 
+	 * fdev around 3.5KHz, 
 	 * RxBw >= 30 
 	 */
 	uint16_t bitrate = KPBS_10;
 	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
 	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
-	uint16_t fdev_reg = 0xA3;
+	uint16_t fdev_reg = 0x3A;
 	sx1278_write_reg(RegFdevMsb, (uint8_t) (fdev_reg >> 8));
 	sx1278_write_reg(RegFdevLsb, (uint8_t) (fdev_reg >> 0));
 
-	uint8_t rxbw_reg = 0x4; 
+	uint8_t rxbw_reg = 0xA; /* 100 RxBw */
 	sx1278_write_reg(RegRxBw, rxbw_reg);
 
 	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
@@ -282,7 +279,7 @@ void sx1278_burstwrite_fifo(uint8_t* payload, size_t payload_len) {
 	size_t reg_len = payload_len + 1;
 	uint8_t reg[reg_len];
 	reg[0] = 0x80 | RegFifo;
-	memcpy(&reg[2], payload, payload_len);
+	memcpy(&reg[1], payload, payload_len);
 
 	platform_spi_call(chip_spi, reg, (uint8_t*)0, reg_len);
 }
