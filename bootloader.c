@@ -6,13 +6,11 @@
 #include <hal.h>
 #include <rcc.h>
 #include <packet_parser.h>
-#include <lora_stm32.h>
 
 #define MAX_CHUNK_SIZE 200
 
 volatile uint8_t rx_ready = 0;
 uint8_t rx_buf[CHUNK_SIZE + 1];
-struct lora lora;
 
 static inline void blink_led(void) {
 	uint32_t led_pin = PIN_NUM(5);
@@ -35,7 +33,6 @@ static void download_ota_packets(void) {
 		delay(1); /* Why is this necessary */
 		if (rx_ready && (get_ota_state() == 1)) {
 			uint8_t state = parse_packet_state(rx_buf);
-			lora_transmit(&lora, &state, 1);
 			ack_timeout = (int) get_tick();
 			if (state == PKT_COMPLETE) return;
 		rx_ready = 0;
@@ -96,6 +93,5 @@ void boot(void) {
 }
 
 void lora_rx_irq(void) {
-	lora_receive(&lora, rx_buf);
 	rx_ready = 1;
 }

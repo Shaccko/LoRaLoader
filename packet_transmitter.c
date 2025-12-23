@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <time.h>
 
-#include <lora_raspi.h>
 #include <packet_transmitter.h>
 
 static long int get_tick(void) {
@@ -24,7 +23,7 @@ void generate_firmware_packet(struct packet* pkt, uint8_t* data_buf, size_t byte
 	}
 }
 
-uint8_t send_tx_wait_ack(struct lora* lora, uint8_t* tx, size_t tx_len) {
+uint8_t send_tx_wait_ack(uint8_t* tx, size_t tx_len) {
 	uint8_t irq, err_count = 0, ack_status = 0;
 	uint8_t rx_buf;
 
@@ -37,12 +36,10 @@ uint8_t send_tx_wait_ack(struct lora* lora, uint8_t* tx, size_t tx_len) {
 		}
 
 		printf("Sent transmission\n");
-		//lora_transmit(lora, tx, tx_len);
 		do {
-			read_reg(RegIrqFlags, &irq);
+			//read_reg(RegIrqFlags, &irq);
 			usleep(1);
 		} while ((irq & 0x40U) == 0 || (get_tick() - ack_timer) > 2000);
-		//lora_receive(lora, &rx_buf);
 
 		if (rx_buf == ACK_CODE || rx_buf == PKT_PASS || rx_buf == PKT_COMPLETE) {
 			ack_status = 1;

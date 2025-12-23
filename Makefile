@@ -9,8 +9,8 @@ LDFLAGS ?= -nostartfiles -nostdlib --specs nano.specs -lc -lgcc -Wl,--gc-section
 BOOTLOADER_LD ?= bootloader.ld
 BOOTLOADER_SOURCES = bootloader.c startup_bootloader.c rcc.c \
 		     syscalls.c uart.c flash.c packet_parser.c \
-		     spi_stm32.c lora_stm32.c exti.c
-BOOTLOADER_HEADER = rcc.h hal.h uart.h spi_stm32.h packet_parser.h lora_stm32.h exti.h
+		     spi_stm32.c exti.c
+BOOTLOADER_HEADER = rcc.h hal.h uart.h spi_stm32.h packet_parser.h exti.h
 BOOTLOADER_ADDR = 0x08000000
 
 FIRMWARE_LD ?= f411re.ld
@@ -24,9 +24,9 @@ FIRMWARE_ADDR = 0x08004000
 FIRMWARE_OTA_SOURCES = stm32_new_main.c rcc.c startup_f411re.c uart.c
 FIRMWARE_OTA_HEADER = rcc.h hal.h uart.h 
 
-RASPI_SOURCES = main_raspi.c gpio_raspi.c lora_raspi.c spi_raspi.c \
+RASPI_SOURCES = main_raspi.c gpio_raspi.c spi_raspi.c \
 		packet_transmitter.c
-RASPI_HEADERS = gpio_raspi.h lora_raspi.h spi_raspi.h packet_transmitter.h \
+RASPI_HEADERS = gpio_raspi.h spi_raspi.h packet_transmitter.h \
 		sx1278_spi_call.h
 
 ifeq ($(OS),WINDOWS_NT)
