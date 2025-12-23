@@ -21,7 +21,7 @@ int main() {
 	spi1_init();
 	systick_init();
 
-	init_fsk();
+	if (init_fsk() != OK) printf("SX1278 Failed.\r\n");
 
 	/* USE FSK FOR PACKETS */
 	for(;;) {

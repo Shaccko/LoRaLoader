@@ -6,6 +6,8 @@
 #include <uart.h>
 #include <exti.h>
 
+#include <sx1278_spi_call.h>
+
 static uint8_t curr_mode = 0;
 struct spi* chip_spi;
 
@@ -51,8 +53,8 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 	 * bytes into Fifo, and TX triggers on
 	 * FIFO >= FifoThresh + 1
 	 */
-	sx1278_write_reg(RegFifoThresh, 0x3F); /* Start cond at 0 */
 	sx1278_set_mode(STDBY);	
+	sx1278_write_reg(RegFifoThresh, 0x3F); /* Start cond at 0 */
 	fsk_set_payload_len((uint16_t) (msg_len));
 
 
@@ -95,18 +97,14 @@ uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 	 * Set TxStartCondition to FifoEmpty */
 	sx1278_set_mode(STDBY);	
 
-	uint8_t reg_data;
-	sx1278_write_reg(RegPacketConfig1, 0x90);
+	sx1278_write_reg(RegPacketConfig1, 0x90); /* Variable packet, CRC on */
 	sx1278_write_reg(RegFifoThresh, 0x80); /* Start cond at 0 */
 
-
-	uint8_t reg;
-	sx1278_read_reg(RegPacketConfig1, &reg);
+	/* [0] = msg_len ? */
 	uint8_t fifo_buf[64];
 	memcpy(fifo_buf, msg, msg_len);
 	sx1278_burstwrite_fifo(fifo_buf, msg_len);
 	sx1278_set_mode(TX);
-
 
 	/* Wait for TX to finish */
 	if (wait_irq_flag(PACKET_SENT) == 0) {
@@ -230,9 +228,16 @@ void sx1278_write_reg(uint8_t addr, uint8_t val) {
 	reg[0] = 0x80 | addr;
 	reg[1] = val;
 
+	/*
+	#ifndef __linux
 	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_RESET);
 	spi_transmit_receive(chip_spi, reg, 0, reg_len);
 	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_SET);
+	#else
+	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
+	#endif
+	*/
+	platform_spi_call(chip_spi, reg, (uint8_t*)0, reg_len);
 }
 
 void sx1278_read_reg(uint8_t addr, uint8_t* out) {
@@ -243,9 +248,17 @@ void sx1278_read_reg(uint8_t addr, uint8_t* out) {
 	reg[0] = addr & 0x7F; 
 	reg[1] = 0;
 
+	/*
+	#ifndef __linux
 	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_RESET);
 	spi_transmit_receive(chip_spi, reg, rx_buf, reg_len);
 	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_SET);
+	#else
+	spidev_transmit_receive(reg, rx_buf, reg_len);
+	#endif
+	*/
+
+	platform_spi_call(chip_spi, reg, rx_buf, reg_len);
 	
 	*out = rx_buf[1];
 }
@@ -261,9 +274,17 @@ void sx1278_burstwrite_fifo(uint8_t* payload, size_t payload_len) {
 	reg[0] = 0x80 | RegFifo;
 	memcpy(&reg[2], payload, payload_len);
 
+	/*
+	#ifdef __linux
 	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_RESET);
 	spi_transmit_receive(chip_spi, reg, (uint8_t*)0, reg_len);
 	gpio_write_pin(SX1278_PORT, CS_PIN, GPIO_PIN_SET);
+	#else
+	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
+	#endif
+	*/
+
+	platform_spi_call(chip_spi, reg, (uint8_t*)0, reg_len);
 }
 
 void sx1278_set_mode(uint8_t mode) {

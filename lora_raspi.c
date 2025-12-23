@@ -307,15 +307,6 @@ void fsk_set_fdev(uint16_t fdev) {
 	write_reg(RegFdevLsb, reg_data);
 }
 
-void write_reg(uint8_t addr, uint8_t val) {
-	uint8_t reg[2];
-	static const size_t reg_len = 2;
-
-	reg[0] = 0x80 | addr;
-	reg[1] = val;
-
-	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
-}
 
 void lora_burstwrite(uint8_t* payload, size_t payload_len) {
 	/* This line will be kept as memorabilia, as it alone
@@ -344,6 +335,16 @@ void read_reg(uint8_t addr, uint8_t* out) {
 	spidev_transmit_receive(reg, rx_buf, reg_len);
 
 	*out = rx_buf[1];
+}
+
+void write_reg(uint8_t addr, uint8_t val) {
+	uint8_t reg[2];
+	static const size_t reg_len = 2;
+
+	reg[0] = 0x80 | addr;
+	reg[1] = val;
+
+	spidev_transmit_receive(reg, (uint8_t*)0, reg_len);
 }
 
 void set_mode(uint8_t mode) {
