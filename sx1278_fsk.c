@@ -5,6 +5,7 @@
 #include <spi_stm32.h>
 #include <uart.h>
 #include <exti.h>
+#include <unistd.h>
 
 #include <sx1278_platform_calls.h>
 
@@ -99,7 +100,6 @@ static void print_regs(void) {
 	printf("RegFifoThresh: %x\r\n", reg);
 }
 uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
-	print_regs();
 	if (msg_len > MAX_FIFO_CHUNK) return FAIL;
 
 	/* Change packet format to variable 
@@ -128,9 +128,13 @@ uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 }
 
 uint8_t fsk_receive(uint8_t* rx_buf) {
+	//if (wait_irq_flag(FIFO_LEVEL) == 0) return FAIL;
+	if (wait_irq_flag(PAYLOAD_READY) == 0) return FAIL;
+	
+	sx1278_set_mode(STDBY);
+
 	uint8_t fifo_len;
 	sx1278_read_reg(RegFifo, &fifo_len);
-	printf("Fifo_len: %x\n", fifo_len);
 	if (fifo_len == 0) return FAIL;
 
 	size_t i;
@@ -138,7 +142,6 @@ uint8_t fsk_receive(uint8_t* rx_buf) {
 		sx1278_read_reg(RegFifo, &rx_buf[i]);
 	}
 
-	sx1278_set_mode(STDBY);
 	sx1278_set_mode(RXCONT);
 	return OK;
 }
@@ -147,8 +150,17 @@ uint8_t fsk_receive(uint8_t* rx_buf) {
 /* LNA Gain, PaRamp and Power Gain */
 static inline void sx1278_set_fsk_configs(void) {
 	sx1278_write_reg(RegGainConfig, POWER_20dB);
-	sx1278_write_reg(RegLNA, 0x23);
-	sx1278_write_reg(RegPaRamp, 0xF);
+	sx1278_write_reg(RegLNA, 0xA3); /* prev 0x23 */
+	sx1278_write_reg(RegPaRamp, 0x29); /* prev 0xF */
+
+	printf("fsk_configs:\r\n");
+	uint8_t reg;
+	sx1278_read_reg(RegGainConfig, &reg);
+	printf("gain config: %x\r\n", reg);
+	sx1278_read_reg(RegLNA, &reg);
+	printf("RegLNA config: %x\r\n", reg);
+	sx1278_read_reg(RegPaRamp, &reg);
+	printf("Pa ramp config: %x\r\n", reg);
 }	
 
 static inline void sx1278_set_fsk_pins_stm32(void) {
@@ -205,6 +217,15 @@ static inline void fsk_kbps_fast(void) {
 	uint8_t rxbw_reg = 0x1; /* 250 RxBw */
 	sx1278_write_reg(RegRxBw, rxbw_reg);
 
+	printf("fsk_configs:\r\n");
+	uint8_t reg;
+	sx1278_read_reg(RegBitrateLsb, &reg);
+	printf("bitrate config: %x\r\n", reg);
+	sx1278_read_reg(RegFdevLsb, &reg);
+	printf("fdev config: %x\r\n", reg);
+	sx1278_read_reg(RegRxBw, &reg);
+	printf("rxbw config: %x\r\n", reg);
+
 	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
 }
 
@@ -218,7 +239,7 @@ static inline void fsk_kbps_mid(void) {
 	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
 	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
-	uint16_t fdev_reg = 0x143;
+	uint16_t fdev_reg = 0xF5;
 	sx1278_write_reg(RegFdevMsb, (uint8_t) (fdev_reg >> 8));
 	sx1278_write_reg(RegFdevLsb, (uint8_t) (fdev_reg >> 0));
 
@@ -238,7 +259,7 @@ static inline void fsk_kbps_slow(void) {
 	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
 	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
-	uint16_t fdev_reg = 0x3A;
+	uint16_t fdev_reg = 0x52;
 	sx1278_write_reg(RegFdevMsb, (uint8_t) (fdev_reg >> 8));
 	sx1278_write_reg(RegFdevLsb, (uint8_t) (fdev_reg >> 0));
 

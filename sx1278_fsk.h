@@ -27,6 +27,12 @@
 /* Receiver BW Reg */
 #define RegRxBw 0x12
 
+/* AFC Bw Reg */
+#define RegAfcBw 0x13
+
+/* Receiver Config */
+#define RegRxConfig 0x0d
+
 /* Packet Config Registers */
 #define RegSyncConfig 0x27
 #define RegPacketConfig1 0x30

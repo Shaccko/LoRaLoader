@@ -41,10 +41,13 @@ int main(int argc, char *argv[]) {
 	sx1278_set_mode(RXCONT);
 
 	uint8_t buf[CHUNK_SIZE];
-	for (;;) {
+	uint32_t counter = 0;
+	while(stop == 0) {
 		fsk_receive(buf);
-		printf("Buf: %s\n", buf);
-		usleep(500*1000);
+		if (strcmp((char*)buf, "This is a transmission") != 0) {
+			counter++;
+			printf("%d\r\n", counter);
+		}
 	}
 	size_t bytes_read;
 	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
