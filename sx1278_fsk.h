@@ -14,11 +14,15 @@
 #define RegBitrateMsb 0x02
 #define RegBitrateLsb 0x03
 /* kpbs values */
-#define KPBS_10  (0x0D | 0x05)
-#define KPBS_50  (0x80 | 0x00)
-#define KPBS_80  (0x01 | 0xA1)
-#define KBPS_100 (0x01 | 0x40)
-#define KPBS_150 (0x00 | 0xD0)
+#define KBPS_10  ((0x0D << 8) | 0x05)
+#define KBPS_50  ((0x80 << 8) | 0x00)
+#define KBPS_80  ((0x01 << 8) | 0xA1)
+#define KBPS_100 ((0x01 << 8) | 0x40)
+#define KBPS_150 ((0x00 << 8) | 0xD0)
+#define KBPS_200 ((0x00 << 8) | 0xA0)
+#define KBPS_250 ((0x00 << 8) | 0x80)
+#define KBPS_300 ((0x00 << 8) | 0x6B)
+#define KBPS_XTAL ((0x03 << 8) | 0xD1)
 
 /* Frequency Deviation Reg */
 #define RegFdevMsb 0x04
@@ -50,10 +54,6 @@
 /* Gain Power Register */
 #define RegGainConfig 0x09
 
-#define KPBS_50  (0x80 | 0x00)
-#define KPBS_150 (0x00 | 0xD0)
-#define KPBS_300 (0x00 | 0x6B)
-
 /* Ramp Reg */
 #define RegPaRamp 0x0A
 
@@ -63,8 +63,8 @@
 #define RegLNA 0x0C
 
 /* Preamble Register */
-#define RegPreambleMsb 0x20
-#define RegPreambleLsb 0x21
+#define RegPreambleMsb 0x25
+#define RegPreambleLsb 0x26
 
 /* RegFifoThresh reg */
 #define RegFifoThresh 0x35

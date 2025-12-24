@@ -33,6 +33,14 @@ uint8_t init_fsk(void) {
 	sx1278_set_fsk_configs();
 	fsk_kbps_fast();
 
+	/*
+	sx1278_write_reg(RegPreambleLsb, 0x01);
+	uint8_t reg;
+	sx1278_read_reg(RegSyncConfig, &reg);
+	reg &= ~(1 << 4);
+	sx1278_write_reg(RegSyncConfig, reg);
+	*/
+
 	/* Set DIO here */
 
 	sx1278_set_mode(STDBY);	
@@ -47,6 +55,7 @@ uint8_t init_fsk(void) {
  * If Fifo empty, start filling fifo with bytes,
  * wait till FifoThresh gets set, repeat.
  */
+/* NOT optimal */
 uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 	/* FifoThresh, set to 63 since we put 64
 	 * bytes into Fifo, and TX triggers on
@@ -54,7 +63,6 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 	 */
 	sx1278_set_mode(STDBY);	
 	sx1278_write_reg(RegFifoThresh, 0x3F); /* Start cond at 0 */
-	fsk_set_payload_len(MAX_FIXED_CHUNK);
 
 	sx1278_set_mode(TX);
 	uint8_t fifo_buf[MAX_FIFO_CHUNK];
@@ -63,17 +71,18 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 		/* Get 64 or less than 64 depending on which is greater */
 		uint16_t chunk = (uint16_t) ((total_fifo_size > MAX_FIFO_CHUNK) ?
 				MAX_FIFO_CHUNK : total_fifo_size);
-
-		memcpy(fifo_buf, msg, chunk);
-		sx1278_burstwrite_fifo(fifo_buf, chunk);
-		total_fifo_size = total_fifo_size - chunk;
-		msg = msg + chunk; /* Advancing ptr */
-
-		/* Wait for Fifo to be empty */
-		if (wait_irq_flag(FIFO_EMPTY) == 0) {
-			return FAIL;
+		uint8_t thresh_flag = 0;
+		size_t i;
+		uint32_t counter = 0;
+		for (i = 0; i < msg_len; i++) {
+			while (thresh_flag & FIFO_LEVEL) {
+				sx1278_read_reg(RegIrqFlags2, &thresh_flag);
+			}
+			sx1278_write_reg(RegFifo, msg[i]);
+			total_fifo_size = total_fifo_size - chunk;
+			sx1278_read_reg(RegIrqFlags2, &thresh_flag);
 		}
-			
+				
 	}
 
 	/* Wait for TX to finish */
@@ -87,18 +96,6 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 }
 
 /* For less than 64 bytes tranmission, this is preferred */
-
-static void print_regs(void) {
-	uint8_t reg;
-	sx1278_read_reg(RegPacketConfig2, &reg);
-	printf("PConfig2: %x\r\n", reg);
-	sx1278_read_reg(RegPacketConfig1, &reg);
-	printf("PConfig1: %x\r\n", reg);
-	sx1278_read_reg(RegPayloadLength, &reg);
-	printf("payload len: %x\r\n", reg);
-	sx1278_read_reg(RegFifoThresh, &reg);
-	printf("RegFifoThresh: %x\r\n", reg);
-}
 uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 	if (msg_len > MAX_FIFO_CHUNK) return FAIL;
 
@@ -108,14 +105,12 @@ uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 
 	sx1278_write_reg(RegPacketConfig1, 0x90); /* Variable packet, CRC on */
 	sx1278_write_reg(RegFifoThresh, 0x80); /* Start cond at 0 */
-	fsk_set_payload_len(MAX_FIFO_CHUNK);
 
-	/* [0] = msg_len ? */
-	uint8_t fifo_buf[MAX_FIFO_CHUNK];
+	sx1278_set_mode(TX);
+	uint8_t fifo_buf[MAX_FIFO_CHUNK + 1];
 	fifo_buf[0] = (uint8_t) msg_len;
 	memcpy(&fifo_buf[1], msg, msg_len);
 	sx1278_burstwrite_fifo(fifo_buf, msg_len + 1);
-	sx1278_set_mode(TX);
 
 	/* Wait for TX to finish */
 	if (wait_irq_flag(PACKET_SENT) == 0) {
@@ -128,7 +123,6 @@ uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 }
 
 uint8_t fsk_receive(uint8_t* rx_buf) {
-	//if (wait_irq_flag(FIFO_LEVEL) == 0) return FAIL;
 	if (wait_irq_flag(PAYLOAD_READY) == 0) return FAIL;
 	
 	sx1278_set_mode(STDBY);
@@ -152,15 +146,6 @@ static inline void sx1278_set_fsk_configs(void) {
 	sx1278_write_reg(RegGainConfig, POWER_20dB);
 	sx1278_write_reg(RegLNA, 0xA3); /* prev 0x23 */
 	sx1278_write_reg(RegPaRamp, 0x29); /* prev 0xF */
-
-	printf("fsk_configs:\r\n");
-	uint8_t reg;
-	sx1278_read_reg(RegGainConfig, &reg);
-	printf("gain config: %x\r\n", reg);
-	sx1278_read_reg(RegLNA, &reg);
-	printf("RegLNA config: %x\r\n", reg);
-	sx1278_read_reg(RegPaRamp, &reg);
-	printf("Pa ramp config: %x\r\n", reg);
 }	
 
 static inline void sx1278_set_fsk_pins_stm32(void) {
@@ -202,40 +187,30 @@ static uint8_t wait_irq_flag(uint8_t flag_code) {
 
 /* h = 0.5 */
 static inline void fsk_kbps_fast(void) {
-	/* Setting a kpbs of 80,
+	/* Setting a kpbs of 100,
 	 * fdev around 20KHz, 
-	 * RxBw >= 
+	 * RxBw >= 200
 	 */
-	uint16_t bitrate = KPBS_80;
+	uint16_t bitrate = KBPS_200; /* 0x41 for secret faster bitrate */
 	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
 	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
-	uint16_t fdev_reg = 0x148;
+	uint16_t fdev_reg = 0x25E;
 	sx1278_write_reg(RegFdevMsb, (uint8_t) (fdev_reg >> 8));
 	sx1278_write_reg(RegFdevLsb, (uint8_t) (fdev_reg >> 0));
 
 	uint8_t rxbw_reg = 0x1; /* 250 RxBw */
 	sx1278_write_reg(RegRxBw, rxbw_reg);
-
-	printf("fsk_configs:\r\n");
-	uint8_t reg;
-	sx1278_read_reg(RegBitrateLsb, &reg);
-	printf("bitrate config: %x\r\n", reg);
-	sx1278_read_reg(RegFdevLsb, &reg);
-	printf("fdev config: %x\r\n", reg);
-	sx1278_read_reg(RegRxBw, &reg);
-	printf("rxbw config: %x\r\n", reg);
-
-	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
 }
 
+/* Severe packet loss */
 /* h = 0.8 */
 static inline void fsk_kbps_mid(void) {
 	/* Setting a kpbs of 50,
 	 * fdev around 20KHz, 
 	 * RxBw >= 150 
 	 */
-	uint16_t bitrate = KPBS_50;
+	uint16_t bitrate = KBPS_50;
 	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
 	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
@@ -245,17 +220,16 @@ static inline void fsk_kbps_mid(void) {
 
 	uint8_t rxbw_reg = 0x9; /* 200 RxBw */
 	sx1278_write_reg(RegRxBw, rxbw_reg);
-
-	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
 }
 
+/* Very severe packet loss */
 /* h = 1.0 */
 static inline void fsk_kbps_slow(void) {
 	/* Setting a kpbs of 10,
 	 * fdev around 3.5KHz, 
 	 * RxBw >= 30 
 	 */
-	uint16_t bitrate = KPBS_10;
+	uint16_t bitrate = KBPS_10;
 	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
 	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
@@ -265,8 +239,6 @@ static inline void fsk_kbps_slow(void) {
 
 	uint8_t rxbw_reg = 0xA; /* 100 RxBw */
 	sx1278_write_reg(RegRxBw, rxbw_reg);
-
-	//sx1278_write_reg(RegPreambleLsb, (uint8_t)(>preamb >> 8U));
 }
 
 void sx1278_write_reg(uint8_t addr, uint8_t val) {

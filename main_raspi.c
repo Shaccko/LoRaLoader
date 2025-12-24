@@ -36,22 +36,32 @@ int main(int argc, char *argv[]) {
 		perror("fopen failed");
 		return 1;
 	}
-	sx1278_write_reg(RegFifoThresh, 0x1);
-	fsk_set_payload_len(MAX_FIFO_CHUNK);
-	sx1278_set_mode(RXCONT);
 
-	uint8_t buf[CHUNK_SIZE];
+	/* if x%4 != 0 add 4 - rem */
+	
+	/*
+	uint8_t buf[64];
 	uint32_t counter = 0;
 	while(stop == 0) {
 		fsk_receive(buf);
+		printf("buf: %s\r\n", buf);
 		if (strcmp((char*)buf, "This is a transmission") != 0) {
-			counter++;
 			printf("%d\r\n", counter);
 		}
+		printf("%d\r\n", counter++);
 	}
+	*/	
+
+	//sx1278_set_mode(RXCONT);
+	//fsk_set_payload_len(MAX_FIXED_CHUNK);
 	size_t bytes_read;
-	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
+	uint8_t buf[MAX_FIFO_CHUNK];
+	printf("starting\n");
+	while ((bytes_read = fread(buf, 1, MAX_FIFO_CHUNK, fp)) > 0) {
+		fsk_transmit(buf, MAX_FIFO_CHUNK);
 	}
+	printf("done\n");
+	
 	
 	fclose(fp);
 	close_spidev();
