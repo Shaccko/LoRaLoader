@@ -45,11 +45,9 @@ void enable_line_interrupt(uint16_t pin, uint8_t port, uint8_t trigger_type) {
 	NVIC[EXTI_IRQ[pin_num] >> 5UL] = (uint32_t) (1U << (EXTI_IRQ[pin_num] & 0x1FUL));
 }
 
-
-
 void EXTI3_IRQHandler(void) {
 	EXTI->PR = BIT(3); /* Line 3's bit PR */
 
-	extern void lora_rx_irq(void);
-	lora_rx_irq();
+	extern void sx1278_rx_irq(void);
+	sx1278_rx_irq();
 }

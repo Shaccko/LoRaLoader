@@ -18,7 +18,7 @@ uint8_t parse_packet_state(uint8_t* rx_buf) {
 			break;
 		case (OTA_PACKET_BYTE):
 			memcpy(bin_data, &rx_buf[1], CHUNK_SIZE);
-			uart_write_buf(uart2, "Writing to Flash B\r\n", 20);
+			//uart_write_buf(uart2, "Writing to Flash B\r\n", 20);
 			write_flash_b(bin_data);
 			pkt_state = PKT_PASS;
 			break;

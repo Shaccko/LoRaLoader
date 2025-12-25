@@ -9,8 +9,6 @@
 #include <packet_transmitter.h>
 #include <sx1278_fsk.h>
 
-#define CHUNK_SIZE 250
-
 volatile sig_atomic_t stop = 0;
 uint8_t rx_buf;
 
@@ -39,15 +37,21 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+	//fsk_transmit((uint8_t*)"ho", 2);
 	//sx1278_set_mode(RXCONT);
+	
+	struct image_packet pkt;
+	uint8_t buf[62];
 	size_t bytes_read;
-	uint8_t buf[CHUNK_SIZE];
-	printf("starting\n");
-	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
-		fsk_transmit(buf, CHUNK_SIZE);
+	while ((bytes_read = fread(buf, 1, 61, fp)) > 0) {
+		pkt.header = ACK_CODE;
+		memcpy(pkt.data, buf, bytes_read);
+		fsk_transmit((uint8_t*)&pkt, bytes_read + 1);
 	}
+	
 	printf("done\n");
 	
+	sx1278_set_mode(SLEEP);
 	
 	fclose(fp);
 	close_spidev();

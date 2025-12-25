@@ -33,15 +33,13 @@ uint8_t init_fsk(void) {
 	sx1278_set_fsk_configs();
 	fsk_kbps_fast();
 
-	/*
-	sx1278_write_reg(RegPreambleLsb, 0x01);
-	uint8_t reg;
-	sx1278_read_reg(RegSyncConfig, &reg);
-	reg &= ~(1 << 4);
-	sx1278_write_reg(RegSyncConfig, reg);
-	*/
-
 	/* Set DIO here */
+	/*
+	uint8_t reg;
+	sx1278_read_reg(RegDioMapping1, &reg);
+	reg |= 0x3FU;
+	sx1278_write_reg(RegDioMapping1, (uint8_t)(1U << 2U));
+	*/
 
 	sx1278_set_mode(STDBY);	
 
@@ -97,7 +95,7 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 
 /* For less than 64 bytes tranmission, this is preferred */
 uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
-	if (msg_len > MAX_VARIBLE_CHUNK) return FAIL;
+	if (msg_len > MAX_VARIABLE_CHUNK) return FAIL;
 
 	/* Change packet format to variable 
 	 * Set TxStartCondition to FifoEmpty */
@@ -107,7 +105,7 @@ uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 	sx1278_write_reg(RegFifoThresh, 0x80); /* Start cond at 0 */
 
 	sx1278_set_mode(TX);
-	uint8_t fifo_buf[MAX_VARIABLE_CHUNK + 1];
+	uint8_t fifo_buf[msg_len + 1];
 	fifo_buf[0] = (uint8_t) msg_len;
 	memcpy(&fifo_buf[1], msg, msg_len);
 	sx1278_burstwrite_fifo(fifo_buf, msg_len + 1);
@@ -170,7 +168,9 @@ static uint8_t wait_irq_flag(uint8_t flag_code) {
 	uint8_t flag_reg = 0;
 	uint32_t timeout = get_platform_tick_call();
 	while ((flag_reg & flag_code) == 0) {
-		if ((get_platform_tick_call() - timeout) > 5000) return 0;
+		if ((get_platform_tick_call() - timeout) > 5000){
+			return 0;
+		}
 		sx1278_read_reg(RegIrqFlags2, &flag_reg);
 	}
 	return 1;

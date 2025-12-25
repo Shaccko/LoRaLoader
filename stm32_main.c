@@ -21,17 +21,23 @@ int main() {
 	spi1_init();
 	systick_init();
 
-	if (init_fsk() != OK) printf("SX1278 Failed.\r\n");
+	if (init_fsk() == OK) printf("SX1278 Detected\r\n");
 
+	sx1278_set_mode(RXCONT);
 	/* USE FSK FOR PACKETS */
+	//fsk_transmit((uint8_t*)'f', 1);
+	uint32_t counter = 0;
 	for(;;) {
-		fsk_transmit((uint8_t*) "This is a transmission", 23);
+		if (rx_ready) {
+			printf("received: %d\r\n", ++counter);
+			rx_ready = 0;
+		}
 		//printf("Transmitted.\r\n");
 		delay(1);
 	}
 }
 
-void lora_rx_irq(void) {
-	//lora_receive(&lora, rx_buf);
+void sx1278_rx_irq(void) {
+	fsk_receive(rx_buf);
 	rx_ready = 1;
 }

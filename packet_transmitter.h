@@ -14,15 +14,15 @@
 #define OTA_ERR 0xFF
 
 #define PACKET_TIMEOUT 1500
-#define CHUNK_SIZE 200
+#define CHUNK_SIZE 250
 
-struct packet {
+struct image_packet {
 	uint8_t header, data[CHUNK_SIZE];
 };
 
 long int get_raspi_tick(void);
 uint8_t send_tx_wait_ack(uint8_t* tx, size_t tx_len);
-void generate_firmware_packet(struct packet* pkt, uint8_t* data_buf, size_t bytes_read);
+void generate_firmware_packet(struct image_packet* pkt, uint8_t* data_buf, size_t bytes_read);
 void increment_chunk_num(void);
 
 #endif

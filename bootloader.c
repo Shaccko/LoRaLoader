@@ -92,6 +92,6 @@ void boot(void) {
 	for(;;) (void)0;
 }
 
-void lora_rx_irq(void) {
+void sx1278_rx_irq(void) {
 	rx_ready = 1;
 }

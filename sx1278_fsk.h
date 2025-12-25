@@ -72,6 +72,7 @@
 
 /* DIOx Mapping Registers */
 #define RegDioMapping1 0x40
+#define RegDioMapping2 0x41
 
 /* Modem version Register */
 #define RegVersion 0x42

@@ -13,7 +13,7 @@ long int get_raspi_tick(void) {
 	return (ts.tv_sec) * 1000 + ts.tv_nsec / 10000000L;
 }
 
-void generate_firmware_packet(struct packet* pkt, uint8_t* data_buf, size_t bytes_read) {
+void generate_firmware_packet(struct image_packet* pkt, uint8_t* data_buf, size_t bytes_read) {
 	pkt->header = PACKET_OTA_BYTE;
 	memcpy(pkt->data, data_buf, bytes_read);
 	/* Pad with 0xFF if last packed not 200 */
