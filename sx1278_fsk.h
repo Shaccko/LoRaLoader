@@ -5,6 +5,7 @@
 /* Max FIFO Length */
 #define MAX_FIFO_CHUNK 64
 #define MAX_FIXED_CHUNK 2047
+#define MAX_VARIABLE_CHUNK 255
 
 /* FiFo buffer and OP modes */
 #define RegFifo 0x00

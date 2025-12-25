@@ -9,9 +9,11 @@
 #include <packet_transmitter.h>
 #include <sx1278_fsk.h>
 
-volatile sig_atomic_t stop = 0;
+#define CHUNK_SIZE 250
 
+volatile sig_atomic_t stop = 0;
 uint8_t rx_buf;
+
 
 static void handle_sigint(int sig) {
 	(void)sig;
@@ -37,28 +39,12 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	/* if x%4 != 0 add 4 - rem */
-	
-	/*
-	uint8_t buf[64];
-	uint32_t counter = 0;
-	while(stop == 0) {
-		fsk_receive(buf);
-		printf("buf: %s\r\n", buf);
-		if (strcmp((char*)buf, "This is a transmission") != 0) {
-			printf("%d\r\n", counter);
-		}
-		printf("%d\r\n", counter++);
-	}
-	*/	
-
 	//sx1278_set_mode(RXCONT);
-	//fsk_set_payload_len(MAX_FIXED_CHUNK);
 	size_t bytes_read;
-	uint8_t buf[MAX_FIFO_CHUNK];
+	uint8_t buf[CHUNK_SIZE];
 	printf("starting\n");
-	while ((bytes_read = fread(buf, 1, MAX_FIFO_CHUNK, fp)) > 0) {
-		fsk_transmit(buf, MAX_FIFO_CHUNK);
+	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
+		fsk_transmit(buf, CHUNK_SIZE);
 	}
 	printf("done\n");
 	

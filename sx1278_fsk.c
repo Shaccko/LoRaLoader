@@ -97,7 +97,7 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 
 /* For less than 64 bytes tranmission, this is preferred */
 uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
-	if (msg_len > MAX_FIFO_CHUNK) return FAIL;
+	if (msg_len > MAX_VARIBLE_CHUNK) return FAIL;
 
 	/* Change packet format to variable 
 	 * Set TxStartCondition to FifoEmpty */
@@ -107,7 +107,7 @@ uint8_t fsk_transmit(uint8_t* msg, size_t msg_len) {
 	sx1278_write_reg(RegFifoThresh, 0x80); /* Start cond at 0 */
 
 	sx1278_set_mode(TX);
-	uint8_t fifo_buf[MAX_FIFO_CHUNK + 1];
+	uint8_t fifo_buf[MAX_VARIABLE_CHUNK + 1];
 	fifo_buf[0] = (uint8_t) msg_len;
 	memcpy(&fifo_buf[1], msg, msg_len);
 	sx1278_burstwrite_fifo(fifo_buf, msg_len + 1);
@@ -191,7 +191,7 @@ static inline void fsk_kbps_fast(void) {
 	 * fdev around 20KHz, 
 	 * RxBw >= 200
 	 */
-	uint16_t bitrate = KBPS_200; /* 0x41 for secret faster bitrate */
+	uint16_t bitrate = KBPS_300; /* 0x41 for secret faster bitrate */
 	sx1278_write_reg(RegBitrateMsb, (uint8_t) (bitrate >> 8));
 	sx1278_write_reg(RegBitrateLsb, (uint8_t) (bitrate >> 0));
 
