@@ -37,8 +37,12 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	//fsk_transmit((uint8_t*)"ho", 2);
-	//sx1278_set_mode(RXCONT);
+	/* Image should store:
+	 * CRC maybe
+	 * vto
+	 * Where it wants to place itself in flash
+	 * all inside sram
+	 */
 	
 	struct image_packet pkt;
 	uint8_t buf[62];

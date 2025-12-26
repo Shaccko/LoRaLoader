@@ -11,25 +11,31 @@
 #include <packet_parser.h>
 #include <sx1278_fsk.h>
 
+#define CRC ((struct crc*) 0x40023000)
+
+struct crc {
+	volatile uint32_t DR, IDR, CR;
+};
+
 uint8_t rx_buf[CHUNK_SIZE + 4]; /* Header + CHUNK_SIZE */
 volatile uint8_t rx_ready = 0;
 
 __attribute__((section(".magic_ota_byte"))) volatile uint8_t magic_byte = 0;
 
 int main() {
+	extern uint32_t __image_curr;
 	uart2_init();
 	spi1_init();
 	systick_init();
 
 	if (init_fsk() == OK) printf("SX1278 Detected\r\n");
 
-	sx1278_set_mode(RXCONT);
 	/* USE FSK FOR PACKETS */
 	//fsk_transmit((uint8_t*)'f', 1);
 	uint32_t counter = 0;
 	for(;;) {
+		printf("%X\r\n", *(volatile uint32_t*) (&__image_curr + 1));
 		if (rx_ready) {
-			printf("received: %d\r\n", ++counter);
 			rx_ready = 0;
 		}
 		//printf("Transmitted.\r\n");
