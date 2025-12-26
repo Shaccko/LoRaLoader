@@ -39,21 +39,11 @@ SECTIONS {
 
 
 	/* Custom sections */
-	.magic_ota_byte 0x20001030(NOLOAD) : {
-		*(.magic_ota_byte*)
+	.image_metadata 0x20001000(NOLOAD) : {
+		__image_curr = .;
+		. += 12;
+		__image_wr_bit = .;
 	} > sram
-	__magic_ota_byte = ADDR(.magic_ota_byte);
-
-	.image_metadata_swap 0x20001020(NOLOAD) : {
-		*(.image_metadata_swap*)
-	} > sram
-	__image_swap = ADDR(.image_metadata_swap);
-
-	.image_metadata_curr 0x20001000(NOLOAD) : {
-		*(.image_metadata_curr*)
-	} > sram
-	__image_curr = ADDR(.image_metadata_curr);
-
 
 	. = ALIGN(8);
 	_end = .;

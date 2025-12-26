@@ -14,7 +14,7 @@ __attribute__((naked, noreturn)) void _reset(void) {
 	for (long* dst = &_stext; dst < &_etext; dst++) {
 		*(volatile long*) (0x40023000) = *dst; /* Access CRC reg, assign and read for CRC on word */
 		/* Access image_curr's CRC data position, sum it with memory CRC data register */
-		((volatile long*)(long)&__image_curr)[0] = *(volatile long*) (0x40023000);
+		((volatile long*)(long)&__image_curr)[1] = *(volatile long*) (0x40023000);
 	}
 	
 	/* Store metadata of operating image */

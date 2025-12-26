@@ -34,6 +34,9 @@ int main() {
 	//fsk_transmit((uint8_t*)'f', 1);
 	uint32_t counter = 0;
 	for(;;) {
+		printf("%lX\r\n", ((volatile uint32_t*)(uint32_t)&__image_curr)[0]);
+		printf("%lX\r\n", ((volatile uint32_t*)(uint32_t)&__image_curr)[1]);
+		printf("%lX\r\n", ((volatile uint32_t*)(uint32_t)&__image_curr)[2]);
 		if (rx_ready) {
 			rx_ready = 0;
 		}
