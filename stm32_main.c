@@ -34,12 +34,11 @@ int main() {
 	//fsk_transmit((uint8_t*)'f', 1);
 	uint32_t counter = 0;
 	for(;;) {
-		printf("%X\r\n", *(volatile uint32_t*) (&__image_curr + 1));
 		if (rx_ready) {
 			rx_ready = 0;
 		}
 		//printf("Transmitted.\r\n");
-		delay(1);
+		delay(1000);
 	}
 }
 
