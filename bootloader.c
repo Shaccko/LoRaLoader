@@ -46,6 +46,31 @@ static void download_ota_packets(void) {
 }
 */
 
+static inline void jump_to_flash(uint32_t* app_flash) {
+	blink_led();
+	/* Disable systick for critical statements */
+	disable_irq();
+	SYSTICK->CTRL = 0;
+	SYSTICK->LOAD = 0;
+	SYSTICK->VAL = 0;
+
+	/* Grab msp (start of app's addr) 
+	 * and reset (+4 from start)
+	 */
+
+	uint32_t vt_msp = *((uint32_t*)app_flash);
+	uint32_t reset = *((uint32_t*)app_flash + 4);
+	printf("%X, %X\r\n", vt_msp, reset);
+	void (*app)(void) = ((void(*)(void)) reset);
+
+	/* Some asm to switch msp from bootloader to main app */
+	__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
+
+	/* Execute _reset of app */
+	enable_irq();
+	app();
+}
+
 /* According to ARM's startup procedure, our SP and vec table 
  * gets fetched from our applications very first address, 
  * +4 that and we grab PC and _reset, knowing this we can 
@@ -53,7 +78,7 @@ static void download_ota_packets(void) {
  * app, make sure we change our vec table to our application.
  */
 void boot(void) {
-	extern uint32_t __app_start;
+	extern uint32_t _sflash_a, _sflash_b;
 
 	uart2_init();
 	systick_init();
@@ -64,30 +89,14 @@ void boot(void) {
 	/* Does code exist? We check this by AND'ing MSP that could 
 	 * *potentially* sit at 0x20020000 of our flash region 
 	 */
-	uint32_t app_flash = (uint32_t)(&__app_start); /* Grab address of app's start symbol from linker */
-	if (((*(uint32_t*) app_flash) & 0x2FFE0000) == 0x20020000) {
-
-		blink_led();
-		/* Disable systick for critical statements */
-		disable_irq();
-		SYSTICK->CTRL = 0;
-		SYSTICK->LOAD = 0;
-		SYSTICK->VAL = 0;
-
-		/* Grab msp (start of app's addr) 
-		 * and reset (+4 from start)
-		 */
-		uint32_t vt_msp = (*(uint32_t*)app_flash);
-		uint32_t reset = (*(uint32_t*)(app_flash + 4));
-		void (*app)(void) = ((void(*)(void)) reset);
-
-		/* Some asm to switch msp from bootloader to main app */
-		__asm volatile("msr msp, %0" :: "r"(vt_msp) : "memory");
-
-		/* Execute _reset of app */
-		enable_irq();
-		app();
+	if ((*((uint32_t*)(uint32_t)&_sflash_a) & 0x2FFE0000) == 0x20020000) {
+		jump_to_flash(&_sflash_a);
 	}
+
+	if ((*((uint32_t*)(uint32_t)&_sflash_b) & 0x2FFE0000) == 0x20020000) {
+		jump_to_flash(&_sflash_b);
+	}
+
 
 	/* Run forever */
 	for(;;) (void)0;
