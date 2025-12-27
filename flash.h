@@ -16,6 +16,6 @@ struct flash {
 
 
 void clear_flash_sectors(uint8_t sectors);
-void write_flash_b(uint8_t* bin_data);
+void write_flash(uint8_t* bin_data, uint32_t* flash_addr);
 
 #endif

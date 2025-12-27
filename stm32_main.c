@@ -11,37 +11,36 @@
 #include <packet_parser.h>
 #include <sx1278_fsk.h>
 
-#define CRC ((struct crc*) 0x40023000)
-
-struct crc {
-	volatile uint32_t DR, IDR, CR;
-};
-
 uint8_t rx_buf[CHUNK_SIZE + 4]; /* Header + CHUNK_SIZE */
 volatile uint8_t rx_ready = 0;
 
-__attribute__((section(".magic_ota_byte"))) volatile uint8_t magic_byte = 0;
-
 int main() {
-	extern uint32_t __image_curr;
 	uart2_init();
 	spi1_init();
 	systick_init();
 
 	if (init_fsk() == OK) printf("SX1278 Detected\r\n");
 
-	/* USE FSK FOR PACKETS */
-	//fsk_transmit((uint8_t*)'f', 1);
-	uint32_t counter = 0;
+	sx1278_set_mode(RXCONT);
+	uint32_t timer = 0;
 	for(;;) {
-		printf("%lX\r\n", ((volatile uint32_t*)(uint32_t)&__image_curr)[0]);
-		printf("%lX\r\n", ((volatile uint32_t*)(uint32_t)&__image_curr)[1]);
-		printf("%lX\r\n", ((volatile uint32_t*)(uint32_t)&__image_curr)[2]);
 		if (rx_ready) {
-			rx_ready = 0;
+			if (rx_buf[0] == OTA_PACKET_BYTE) printf("Received\r\n");
+			if (rx_buf[0] == OTA_PACKET_BYTE) {
+				printf("Received\r\n");
+				write_packet(&rx_buf[1]);
+				timer = get_stm32_tick();
+			}
 		}
-		//printf("Transmitted.\r\n");
-		delay(1000);
+
+		/* Packet timeout */
+		if (get_ota_state() == 1 && ((get_stm32_tick() - timer) > 5000)) {
+			printf("Killing firmware\r\n");
+			kill_ota_firmware();
+		}
+
+		rx_ready = 0;
+		delay(1);
 	}
 }
 

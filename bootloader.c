@@ -27,10 +27,11 @@ static inline void blink_led(void) {
 	}
 }
 
+/*
 static void download_ota_packets(void) {
 	int ack_timeout = 0;
 	while(1) {
-		delay(1); /* Why is this necessary */
+		delay(1); 
 		if (rx_ready && (get_ota_state() == 1)) {
 			uint8_t state = parse_packet_state(rx_buf);
 			ack_timeout = (int) get_stm32_tick();
@@ -43,6 +44,7 @@ static void download_ota_packets(void) {
 		}
 	}
 }
+*/
 
 /* According to ARM's startup procedure, our SP and vec table 
  * gets fetched from our applications very first address, 
@@ -52,7 +54,6 @@ static void download_ota_packets(void) {
  */
 void boot(void) {
 	extern uint32_t __app_start;
-	extern uint8_t __magic_ota_byte;
 
 	uart2_init();
 	systick_init();

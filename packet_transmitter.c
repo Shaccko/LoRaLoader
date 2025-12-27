@@ -16,10 +16,11 @@ long int get_raspi_tick(void) {
 void generate_firmware_packet(struct image_packet* pkt, uint8_t* data_buf, size_t bytes_read) {
 	pkt->header = PACKET_OTA_BYTE;
 	memcpy(pkt->data, data_buf, bytes_read);
-	/* Pad with 0xFF if last packed not 200 */
+	/* Pad with 0xFF remaining bytes for next word */
 	if (bytes_read < CHUNK_SIZE) { 
-		uint8_t pad_idx = (uint8_t) (CHUNK_SIZE - bytes_read);
-		memset(&pkt->data[bytes_read], 0xFF, pad_idx);
+		uint8_t rem = bytes_read % 4;
+		rem = 4 - rem;
+		memset(&pkt->data[bytes_read], 0xFF, rem);
 	}
 }
 

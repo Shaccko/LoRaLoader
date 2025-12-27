@@ -63,7 +63,6 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 	sx1278_write_reg(RegFifoThresh, 0x3F); /* Start cond at 0 */
 
 	sx1278_set_mode(TX);
-	uint8_t fifo_buf[MAX_FIFO_CHUNK];
 	size_t total_fifo_size = msg_len;
 	while (total_fifo_size > 0) {
 		/* Get 64 or less than 64 depending on which is greater */
@@ -71,7 +70,6 @@ uint8_t fsk_transmit_stream(uint8_t* msg, size_t msg_len) {
 				MAX_FIFO_CHUNK : total_fifo_size);
 		uint8_t thresh_flag = 0;
 		size_t i;
-		uint32_t counter = 0;
 		for (i = 0; i < msg_len; i++) {
 			while (thresh_flag & FIFO_LEVEL) {
 				sx1278_read_reg(RegIrqFlags2, &thresh_flag);

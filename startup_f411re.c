@@ -1,10 +1,10 @@
+extern long _sflash_a;
 __attribute__((naked, noreturn)) void _reset(void) {
 	extern long _sbss, _ebss, _sidata, _sdata, _edata, _stext, _etext;
 	extern long __image_curr;
-	extern long _sflash;
-
 	/* Set VTO to app's vec table */
-	(*(volatile long*) 0xE000ED08) = (long) &_sflash;
+	(*(volatile long*) 0xE000ED08) = (long) &_sflash_a;
+
 
 	for (long* dst = &_sbss; dst < &_ebss; dst++) *dst = 0;
 	for (long* dst = &_sdata, *src = &_sidata; dst < &_edata;) *dst++ = *src++;
@@ -14,14 +14,10 @@ __attribute__((naked, noreturn)) void _reset(void) {
 	for (long* dst = &_stext; dst < &_etext; dst++) {
 		*(volatile long*) (0x40023000) = *dst; /* Access CRC reg, assign and read for CRC on word */
 		/* Access image_curr's CRC data position, sum it with memory CRC data register */
-		((volatile long*)(long)&__image_curr)[1] = *(volatile long*) (0x40023000);
+		*((volatile long*)(long)&__image_curr) = *(volatile long*) (0x40023000);
 	}
 	
-	/* Store metadata of operating image */
-	*((volatile long*)(long)&__image_curr) = (long) &_sflash;
-
 	*(volatile long*) (0x40023800 + 0x30) &= ~(1L << 12L); /* Reset CRC clock */
-	((volatile long*)(long)&__image_curr)[2] = 0xDEADBEEF;
 
 	/* Jump to main */
 	extern int main(void);
@@ -39,5 +35,3 @@ __attribute__((section(".vectors"))) void (*tab[16 + 91])(void) = {
 	0, 0, 0, 0, 0, 0, 0, 0,
 	0, EXTI3_IRQHandler
 };
-
-

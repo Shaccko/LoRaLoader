@@ -8,13 +8,12 @@
 
 #define ACK_CODE 0xAC
 #define PACKET_OTA_BYTE 0xBC
-#define MAGIC_OTA_BYTE 0xCC
 #define PKT_PASS 0xEC
 #define PKT_COMPLETE 0xAA
 #define OTA_ERR 0xFF
 
 #define PACKET_TIMEOUT 1500
-#define CHUNK_SIZE 250
+#define CHUNK_SIZE 62 
 
 struct image_packet {
 	uint8_t header, data[CHUNK_SIZE];

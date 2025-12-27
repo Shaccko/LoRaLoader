@@ -44,12 +44,11 @@ int main(int argc, char *argv[]) {
 	 * all inside sram
 	 */
 	
-	struct image_packet pkt;
-	uint8_t buf[62];
+	uint8_t buf[CHUNK_SIZE + 1];
 	size_t bytes_read;
-	while ((bytes_read = fread(buf, 1, 61, fp)) > 0) {
-		pkt.header = ACK_CODE;
-		memcpy(pkt.data, buf, bytes_read);
+	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
+		struct image_packet pkt;
+		generate_firmware_packet(&pkt, buf, bytes_read);
 		fsk_transmit((uint8_t*)&pkt, bytes_read + 1);
 	}
 	

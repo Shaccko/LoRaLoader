@@ -38,17 +38,14 @@ void clear_flash_sectors(uint8_t sectors) {
  * Perform data write ops to desired mem addresses
  * Wait for BSY to clear
  */
-void write_flash_b(uint8_t* bin_data) {
-	extern uint32_t __sota_flash;
-
+void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 	FLASH->CR = 0;
 	/* Unlock, enable PG, set paralellism */
 	unlock_flash();
 	while (FLASH->SR & BIT(16));
 	FLASH->CR |= (2U << 8U); /* x32 word writes */
 	FLASH->CR |= BIT(0); /* PG bit */
-	uint32_t* sota_flash = (uint32_t*)&__sota_flash;
-	/* Maybe transmitter could send words instead of single bytes */
+	uint32_t* sota_flash = flash_addr;
 	/* Write words to Flash B region */
 	static size_t chunk_counter = 0;
 	for (uint32_t word = 0U; word <= CHUNK_SIZE - 4; word = word + 4U) {
