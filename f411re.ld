@@ -9,17 +9,17 @@ _sflash_b = ORIGIN(flash_b);
 _estack = ORIGIN(sram) + LENGTH(sram);
 
 SECTIONS {
-	.vectors : { KEEP(*(.vectors*)) } > flash
+	.vectors : { KEEP(*(.vectors*)) } > flash_a
 	.rodata : {
 		*(.rodata)
 		*(.rodata*)
-	} > flash
+	} > flash_a
 	.text : {
 		_stext = .;
 		*(.text)
 		*(.text*)
 		_etext = .;
-	} > flash
+	} > flash_a
 
 
 	.data : {
@@ -27,7 +27,7 @@ SECTIONS {
 		*(.data)
 		*(.data*)
 		_edata = .;
-	} > sram AT > flash
+	} > sram AT > flash_a
 	_sidata = LOADADDR(.data);
 
 	.bss : {

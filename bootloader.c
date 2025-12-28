@@ -46,7 +46,7 @@ static void download_ota_packets(void) {
 }
 */
 
-static inline void jump_to_flash(uint32_t* app_flash) {
+static void jump_to_flash(uint32_t* app_flash) {
 	blink_led();
 	/* Disable systick for critical statements */
 	disable_irq();
@@ -58,9 +58,8 @@ static inline void jump_to_flash(uint32_t* app_flash) {
 	 * and reset (+4 from start)
 	 */
 
-	uint32_t vt_msp = *((uint32_t*)app_flash);
-	uint32_t reset = *((uint32_t*)app_flash + 4);
-	printf("%X, %X\r\n", vt_msp, reset);
+	uint32_t vt_msp = *((uint32_t*)((uint32_t)app_flash));
+	uint32_t reset = *((uint32_t*)((uint32_t)app_flash + 4));
 	void (*app)(void) = ((void(*)(void)) reset);
 
 	/* Some asm to switch msp from bootloader to main app */
