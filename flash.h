@@ -5,7 +5,8 @@
 
 #include <packet_parser.h>
 
-#define FLASHB_SECTOR 3
+#define FLASHA_SECTOR (1 | 2 | 3 | 4 | 5)
+#define FLASHB_SECTOR (6 | 7)
 #define FLASH ((struct flash*) 0x40023C00)
 #define KEY1 0x45670123
 #define KEY2 0xCDEF89AB

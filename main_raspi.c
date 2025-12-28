@@ -51,6 +51,9 @@ int main(int argc, char *argv[]) {
 		generate_firmware_packet(&pkt, buf, bytes_read);
 		fsk_transmit((uint8_t*)&pkt, bytes_read + 1);
 	}
+
+	uint8_t stop_code = PKT_COMPLETE;
+	fsk_transmit(&stop_code, 1);
 	
 	printf("done\n");
 	

@@ -25,18 +25,22 @@ int main() {
 	uint32_t timer = 0;
 	for(;;) {
 		if (rx_ready) {
-			if (rx_buf[0] == OTA_PACKET_BYTE) printf("Received\r\n");
 			if (rx_buf[0] == OTA_PACKET_BYTE) {
-				printf("Received\r\n");
+				set_ota_state();
 				write_packet(&rx_buf[1]);
 				timer = get_stm32_tick();
 			}
+			if (rx_buf[0] == PKT_COMPLETE) {
+				clear_ota_state();
+				printf("Completed\r\n");
+			}
+
 		}
 
 		/* Packet timeout */
 		if (get_ota_state() == 1 && ((get_stm32_tick() - timer) > 5000)) {
-			printf("Killing firmware\r\n");
 			kill_ota_firmware();
+			printf("Killing firmware\r\n");
 		}
 
 		rx_ready = 0;
