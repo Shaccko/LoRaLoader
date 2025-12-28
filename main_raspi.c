@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
 		struct image_packet pkt;
 		generate_firmware_packet(&pkt, buf, bytes_read);
 		fsk_transmit((uint8_t*)&pkt, bytes_read + 1);
+		usleep(10);
 	}
 
 	uint8_t stop_code = PKT_COMPLETE;

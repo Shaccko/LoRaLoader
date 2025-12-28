@@ -14,7 +14,8 @@ void write_packet(uint8_t* rx_buf) {
 void kill_ota_firmware(void) {
 	/* Kill firmware */
 	ota_tx_rdy = 0;
-
+	
+	printf("Killing firmware\r\n");
 	clear_flash_sectors(FLASHB_SECTOR);
 }
 

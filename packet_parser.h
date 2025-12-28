@@ -17,6 +17,7 @@ static uint8_t ota_tx_rdy = 0;
 
 void write_packet(uint8_t* rx_buf);
 void kill_ota_firmware(void);
+uint8_t parse_packet_state(uint8_t* rx_buf);
 
 static inline void set_ota_state(void) {
 	ota_tx_rdy = 1;
