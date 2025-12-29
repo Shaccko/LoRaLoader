@@ -101,6 +101,39 @@ void boot(void) {
 	for(;;) (void)0;
 }
 
-void sx1278_rx_irq(void) {
-	rx_ready = 1;
+/*
+ * __attribute__((section(".flash_ptr"))) static uint8_t* flash_ptr = &_sflash_a;
+ */
+
+
+/*
+ * if (flash_a exists) {
+ * 	flash_ptr = flash_a;
+ * }
+ * elif (flash_b exists) {
+ * 	flash_ptr = flash_b;
+ * }
+ * else
+ * 	set flash pointer
+ * 	flash_ptr
+ *}
+ *
+ *
+ *
+ *if (flash_ptr) {
+ 	boot to flash_ptr
+else {
+	check which region has valid flash
+	manually boot to that region
 }
+when flash is done downloading, set flash pointer to downloaded region
+if region's crc check fails, fall back to safe flash region
+else set safe flash region to flash pointer
+
+safe flash region should be set somehow somewhere
+ *
+ * Write flash pointer into a special flash region when done processing last packet
+ * Write flash CRC into special crc region, if no crc is written, inform user that flash isn't verified and may be prone to errors, but boot anyways
+ *
+ *
+ */

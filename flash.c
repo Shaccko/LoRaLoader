@@ -48,7 +48,8 @@ void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 	uint32_t* sota_flash = flash_addr;
 	/* Write words to Flash B region */
 	static size_t chunk_counter = 0;
-	for (uint32_t word = 0U; word <= CHUNK_SIZE - 4; word = word + 4U) {
+	/* Chunk size needs to be a multiple of 4 */
+	for (uint32_t word = 0U; word <= CHUNK_SIZE; word = word + 4U) {
 		/* Little endian */
 		uint32_t chunk_word = ((uint32_t) bin_data[word + 0U] << 0) |
 			((uint32_t) bin_data[word + 1U] << 8) |

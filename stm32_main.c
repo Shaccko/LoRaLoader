@@ -29,7 +29,7 @@ int main() {
 			if (rx_buf[0] == OTA_PACKET_BYTE) {
 				if (get_ota_state() == 0) {
 					/* Raspi doesnt wait and reception gets bricked */
-					kill_ota_firmware();
+					// kill_ota_firmware();
 					set_ota_state();
 				}
 				write_packet(&rx_buf[1]);

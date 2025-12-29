@@ -1,7 +1,7 @@
 ENTRY(_reset);
 MEMORY {
 	flash_a(rx) : 	ORIGIN = 0x08004000, LENGTH = 248k /* Occupying sectors 1-5 */
-	flash_b(rx) : ORIGIN = 0x08040000, LENGTH = 16k /* Sector 6-7 */
+	flash_b(rx) : ORIGIN = 0x08040000, LENGTH = 248k /* Sector 6-7 */
 	sram(rxw) : 	ORIGIN = 0x20000000, LENGTH = 128k
 }
 _sflash_a = ORIGIN(flash_a);
