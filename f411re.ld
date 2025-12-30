@@ -1,7 +1,7 @@
 ENTRY(_reset);
 MEMORY {
 	flash_md(rx) :  ORIGIN = 0x08004000, LENGTH = 16k /* Flash metadata */
-	flash_a(rx) : 	ORIGIN = 0x08008000, LENGTH = 248k - 16k /* Occupying sectors 1-5 */
+	flash_a(rx) : 	ORIGIN = 0x08008000, LENGTH = 248k - 16k /* Occupying sectors 2-5 */
 	flash_b(rx) :   ORIGIN = 0x08040000, LENGTH = 248k /* Sector 6-7 */
 	sram(rxw) : 	ORIGIN = 0x20000000, LENGTH = 128k
 }
@@ -31,6 +31,11 @@ SECTIONS {
 		_edata = .;
 	} > sram AT > flash_a
 	_sidata = LOADADDR(.data);
+
+	.flash_metadata : {
+		_flash_ptr = .;
+		KEEP(*(.flash_metadata))
+	} > flash_md
 
 	.bss : {
 		_sbss = .;

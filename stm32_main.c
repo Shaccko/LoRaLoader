@@ -26,19 +26,9 @@ int main() {
 	for(;;) {
 		delay(1);
 		if (rx_ready) {
+			write_packet(rx_buf);
 			if (rx_buf[0] == OTA_PACKET_BYTE) {
-				if (get_ota_state() == 0) {
-					/* Raspi doesnt wait and reception gets bricked */
-					// kill_ota_firmware();
-					set_ota_state();
-				}
-				write_packet(&rx_buf[1]);
 				timer = get_stm32_tick();
-			}
-			if (rx_buf[0] == PKT_COMPLETE) {
-				clear_ota_state();
-				printf("Firmware download complete, please \
-						restart MCU for firmware swap.\r\n");
 			}
 
 		}

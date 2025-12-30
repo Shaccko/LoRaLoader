@@ -19,7 +19,7 @@ FIRMWARE_SOURCES = stm32_main.c rcc.c startup_f411re.c uart.c \
 		   packet_parser.c flash.c
 FIRMWARE_HEADER = rcc.h hal.h uart.h spi_stm32.h sx1278_fsk.h \
 		  exti.h packet_parser.h flash.h
-FIRMWARE_ADDR = 0x08004000
+FIRMWARE_ADDR = 0x08008000
 
 FIRMWARE_OTA_SOURCES = stm32_new_main.c rcc.c startup_f411re.c uart.c
 FIRMWARE_OTA_HEADER = rcc.h hal.h uart.h 

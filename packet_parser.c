@@ -12,13 +12,16 @@ void write_packet(uint8_t* rx_buf) {
 	write_addr = ((uint32_t*)&_flash_ptr) == ((uint32_t*)&_sflash_a) ? 
 		((uint32_t*)&_sflash_b) : ((uint32_t*)&_sflash_a);
 
-	printf("write_addr: %lX\r\n", *write_addr);
+	printf("write_addr: %lX\r\n", write_addr);
+	if (get_ota_state() == 0) set_ota_state();
 	switch (rx_buf[0]) {
 		case OTA_PACKET_BYTE:
-			write_flash(rx_buf, ((uint32_t*)(uint32_t)write_addr));
+			write_flash(rx_buf, write_addr);
 			break;
 		case PKT_COMPLETE:
 			set_flash_ptr(write_addr);
+			clear_ota_state();
+			printf("Firmware download complete, please restart MCU.\r\n");
 			break;
 	}
 

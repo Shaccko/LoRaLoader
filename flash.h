@@ -12,7 +12,6 @@
 #define KEY1 0x45670123
 #define KEY2 0xCDEF89AB
 
-extern uint32_t* flash_ptr;
 // extern uint32_t* flash_fallback;
 
 struct flash {

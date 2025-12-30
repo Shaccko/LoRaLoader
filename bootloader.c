@@ -76,6 +76,7 @@ static void jump_to_flash(uint32_t* app_flash) {
  */
 void boot(void) {
 	extern uint32_t _sflash_a, _sflash_b;
+	extern uint32_t _flash_ptr;
 
 	uart2_init();
 	systick_init();
@@ -86,12 +87,24 @@ void boot(void) {
 	/* Does code exist? We check this by AND'ing MSP that could 
 	 * *potentially* sit at 0x20020000 of our flash region 
 	 */
-	if ((*((uint32_t*)(uint32_t)&_sflash_a) & 0x2FFE0000) == 0x20020000) {
-		jump_to_flash(&_sflash_a);
+	if ((*((uint32_t*)&_flash_ptr) & 0xFFFF3FFFU) == 0x08000000) {
+		/* Jump to whatever flash flash_ptr is pointing at */
+		printf("Flash ptr set %lX\r\n", (uint32_t)&_flash_ptr);
+		jump_to_flash(&_flash_ptr);
 	}
+	else {
+		/* Manually check which flash region is available */
+		if ((*((uint32_t*)(uint32_t)&_sflash_a) & 0x2FFE0000) == 0x20020000) {
+			printf("Flash a set as ptr %lX\r\n", (uint32_t)&_sflash_a);
+			set_flash_ptr(&_sflash_a);
+			jump_to_flash(&_sflash_a);
+		}
 
-	if ((*((uint32_t*)(uint32_t)&_sflash_b) & 0x2FFE0000) == 0x20020000) {
-		jump_to_flash(&_sflash_b);
+		if ((*((uint32_t*)(uint32_t)&_sflash_b) & 0x2FFE0000) == 0x20020000) {
+			printf("Flash b set as ptr %lX\r\n", (uint32_t)&_sflash_b);
+			set_flash_ptr(&_sflash_b);
+			jump_to_flash(&_sflash_b);
+		}
 	}
 
 
