@@ -9,7 +9,6 @@ MEMORY {
 _sflash_a = ORIGIN(flash_a);
 _sflash_b = ORIGIN(flash_b);
 _estack = ORIGIN(sram) + LENGTH(sram);
-_flash_ptr = ORIGIN(flash_md);
 
 SECTIONS {
 	.vectors : { KEEP(*(.vectors*)) } > flash_a

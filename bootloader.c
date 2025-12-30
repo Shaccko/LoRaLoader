@@ -87,10 +87,12 @@ void boot(void) {
 	/* Does code exist? We check this by AND'ing MSP that could 
 	 * *potentially* sit at 0x20020000 of our flash region 
 	 */
+	printf("flash_ptr: %lX\r\n", *((uint32_t*)&_flash_ptr));
 	if ((*((uint32_t*)&_flash_ptr) & 0xFFFF3FFFU) == 0x08000000) {
 		/* Jump to whatever flash flash_ptr is pointing at */
-		printf("Flash ptr set %lX\r\n", (uint32_t)&_flash_ptr);
-		jump_to_flash(&_flash_ptr);
+		/* Dereferenced address of symbol to get flash region,
+		 * casted back to ptr type */
+		jump_to_flash((uint32_t*)(*((uint32_t*)&_flash_ptr)));
 	}
 	else {
 		/* Manually check which flash region is available */

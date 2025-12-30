@@ -74,8 +74,7 @@ void set_flash_ptr(uint32_t* flash_addr) {
 	FLASH->CR |= (2U << 8U);
 	FLASH->CR |= BIT(0);
 
-	*((uint32_t*)(uint32_t)&_flash_ptr) = *flash_addr;
-	printf("%lX\r\n", *((uint32_t*)(uint32_t)&_flash_ptr));
+	*((uint32_t*)(uint32_t)&_flash_ptr) = (uint32_t)flash_addr;
 
 	while (FLASH->SR & BIT(16));
 	FLASH->CR &= ~(BIT(0));
