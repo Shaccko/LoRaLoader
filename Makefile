@@ -9,8 +9,8 @@ LDFLAGS ?= -nostartfiles -nostdlib --specs nano.specs -lc -lgcc -Wl,--gc-section
 BOOTLOADER_LD ?= bootloader.ld
 BOOTLOADER_SOURCES = bootloader.c startup_bootloader.c rcc.c \
 		     syscalls.c uart.c flash.c packet_parser.c \
-		     spi_stm32.c exti.c
-BOOTLOADER_HEADER = rcc.h hal.h uart.h spi_stm32.h packet_parser.h exti.h
+		     spi_stm32.c
+BOOTLOADER_HEADER = rcc.h hal.h uart.h spi_stm32.h packet_parser.h 
 BOOTLOADER_ADDR = 0x08000000
 
 FIRMWARE_LD ?= f411re.ld

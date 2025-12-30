@@ -5,14 +5,12 @@
 #include <uart.h>
 #include <hal.h>
 #include <rcc.h>
+
 #include <packet_parser.h>
+#include <flash.h>
 
-#define MAX_CHUNK_SIZE 200
 
-volatile uint8_t rx_ready = 0;
-uint8_t rx_buf[CHUNK_SIZE + 1];
-
-static inline void blink_led(void) {
+static void blink_led(void) {
 	uint32_t led_pin = PIN_NUM(5);
 	uint8_t led_port = 'A';
 
@@ -100,6 +98,7 @@ void boot(void) {
 	/* Run forever */
 	for(;;) (void)0;
 }
+
 
 /*
  * __attribute__((section(".flash_ptr"))) static uint8_t* flash_ptr = &_sflash_a;

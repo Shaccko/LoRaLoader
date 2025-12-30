@@ -13,7 +13,7 @@
 #define OTA_ERR 0xFF
 
 #define PACKET_TIMEOUT 1500
-#define CHUNK_SIZE 62 
+#define CHUNK_SIZE 60
 
 struct image_packet {
 	uint8_t header, data[CHUNK_SIZE];

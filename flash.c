@@ -5,6 +5,8 @@
 #include <hal.h>
 #include <flash.h>
 
+static size_t chunk_counter = 0;
+
 static inline void unlock_flash(void) {
 	FLASH->KEYR = KEY1;
 	FLASH->KEYR = KEY2;
@@ -39,7 +41,6 @@ void clear_flash_sectors(uint8_t sectors) {
  * Wait for BSY to clear
  */
 void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
-	FLASH->CR = 0;
 	/* Unlock, enable PG, set paralellism */
 	unlock_flash();
 	while (FLASH->SR & BIT(16));
@@ -47,7 +48,6 @@ void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 	FLASH->CR |= BIT(0); /* PG bit */
 	uint32_t* sota_flash = flash_addr;
 	/* Write words to Flash B region */
-	static size_t chunk_counter = 0;
 	/* Chunk size needs to be a multiple of 4 */
 	for (uint32_t word = 0U; word <= CHUNK_SIZE; word = word + 4U) {
 		/* Little endian */
@@ -63,3 +63,36 @@ void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 	FLASH->CR &= ~(BIT(0));
 	lock_flash();
 }
+
+void set_flash_ptr(uint32_t* flash_addr) {
+	extern uint32_t _flash_ptr;
+
+	clear_flash_sectors(FLASH_MD_SECTOR);
+	unlock_flash();
+	while (FLASH->SR & BIT(16));
+	FLASH->CR |= (2U << 8U);
+	FLASH->CR |= BIT(0);
+
+	_flash_ptr = (uint32_t)&flash_addr;
+	printf("%lX\r\n", (*(uint32_t*)&_flash_ptr));
+
+	while (FLASH->SR & BIT(16));
+	FLASH->CR &= ~(BIT(0));
+	lock_flash();
+}
+
+
+/*
+void set_flash_fallback(uint32_t* fallback_addr) {
+	unlock_flash();
+	while (FLASH->SR & BIT(16));
+	FLASH->CR |= (2U << 8U);
+	FLASH->CR |= BIT(0);
+
+	flash_fallback = fallback_addr;
+
+	while(FLASH->SR & BIT(16));
+	FLASH->CR &= ~(BIT(0));
+	lock_flash();
+}
+*/

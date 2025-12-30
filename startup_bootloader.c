@@ -16,9 +16,7 @@ extern void SysTick_Handler(void);
 extern void EXTI3_IRQHandler(void);
 
 __attribute__((section(".vectors"))) void (*tab[16 + 91])(void) = {
-	_estack, __bootloader_reset, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SysTick_Handler, 
-	0, 0, 0, 0, 0, 0, 0, 0,
-	0, EXTI3_IRQHandler
+	_estack, __bootloader_reset, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SysTick_Handler
 };
 
 

@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+
+
 	/* Image should store:
 	 * CRC maybe
 	 * vto
@@ -44,6 +46,7 @@ int main(int argc, char *argv[]) {
 	 * all inside sram
 	 */
 	
+	/*
 	uint8_t buf[CHUNK_SIZE + 1];
 	size_t bytes_read;
 	while ((bytes_read = fread(buf, 1, CHUNK_SIZE, fp)) > 0) {
@@ -55,6 +58,7 @@ int main(int argc, char *argv[]) {
 
 	uint8_t stop_code = PKT_COMPLETE;
 	fsk_transmit(&stop_code, 1);
+	*/
 	
 	printf("done\n");
 	
