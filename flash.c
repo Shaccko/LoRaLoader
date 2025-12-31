@@ -47,7 +47,7 @@ void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 	FLASH->CR |= (2U << 8U); /* x32 word writes */
 	FLASH->CR |= BIT(0); /* PG bit */
 	uint32_t* sota_flash = flash_addr;
-	printf("sota_flash: %lX\r\n", *sota_flash);
+	printf("sota_flash: %lX\r\n", sota_flash);
 	/* Write words to Flash B region */
 	/* Chunk size needs to be a multiple of 4 */
 	for (uint32_t word = 0U; word <= CHUNK_SIZE; word = word + 4U) {
@@ -66,14 +66,15 @@ void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 }
 
 void set_flash_ptr(uint32_t* flash_addr) {
-	extern uint32_t _flash_ptr;
-
 	clear_flash_sectors(FLASH_MD_SECTOR);
+	chunk_counter = 0;
+
 	unlock_flash();
 	while (FLASH->SR & BIT(16));
 	FLASH->CR |= (2U << 8U);
 	FLASH->CR |= BIT(0);
 
+	printf("Setting flash_ptr to: %lX\r\n", (uint32_t)flash_addr);
 	*((uint32_t*)(uint32_t)&_flash_ptr) = (uint32_t)flash_addr;
 
 	while (FLASH->SR & BIT(16));

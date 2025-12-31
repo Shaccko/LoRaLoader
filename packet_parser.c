@@ -5,12 +5,9 @@
 #include <uart.h>
 
 void write_packet(uint8_t* rx_buf) {
-	extern uint32_t _sflash_b, _sflash_a;
-	extern uint32_t _flash_ptr;
 	uint32_t* write_addr;
 
-	write_addr = ((uint32_t*)&_flash_ptr) == ((uint32_t*)&_sflash_a) ? 
-		((uint32_t*)&_sflash_b) : ((uint32_t*)&_sflash_a);
+	write_addr = FLASH_PTR_ADDR_VAL == (uint32_t) &_sflash_a ? &_sflash_b : &_sflash_a; 
 
 	printf("write_addr: %lX\r\n", write_addr);
 	if (get_ota_state() == 0) set_ota_state();

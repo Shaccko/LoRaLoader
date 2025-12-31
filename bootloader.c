@@ -76,7 +76,6 @@ static void jump_to_flash(uint32_t* app_flash) {
  */
 void boot(void) {
 	extern uint32_t _sflash_a, _sflash_b;
-	extern uint32_t _flash_ptr;
 
 	uart2_init();
 	systick_init();
@@ -88,10 +87,11 @@ void boot(void) {
 	 * *potentially* sit at 0x20020000 of our flash region 
 	 */
 	printf("flash_ptr: %lX\r\n", *((uint32_t*)&_flash_ptr));
-	if ((*((uint32_t*)&_flash_ptr) & 0xFFFF3FFFU) == 0x08000000) {
+	if ((*((uint32_t*)&_flash_ptr) != 0xFFFFFFFF)) {
 		/* Jump to whatever flash flash_ptr is pointing at */
 		/* Dereferenced address of symbol to get flash region,
 		 * casted back to ptr type */
+		printf("Jumping to flash_ptr: %lX\r\n", *((uint32_t*)&_flash_ptr));
 		jump_to_flash((uint32_t*)(*((uint32_t*)&_flash_ptr)));
 	}
 	else {

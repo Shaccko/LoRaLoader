@@ -12,6 +12,13 @@
 #define KEY1 0x45670123
 #define KEY2 0xCDEF89AB
 
+#define FLASH_ADDR_VAL(x) (*(uint32_t*)x)
+#define FLASH_PTR_ADDR_VAL (*(uint32_t*)&_flash_ptr)
+#define FLASH_ADDR(x) ((uint32_t*)x)
+
+extern uint32_t _sflash_b, _sflash_a;
+extern uint32_t _flash_ptr;
+
 // extern uint32_t* flash_fallback;
 
 struct flash {
