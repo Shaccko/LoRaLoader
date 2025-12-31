@@ -5,18 +5,16 @@
 #include <uart.h>
 
 void write_packet(uint8_t* rx_buf) {
-	uint32_t* write_addr;
+	if (get_ota_state() == 0) {
+		kill_ota_firmware();
+		set_ota_state();
+	}
 
-	write_addr = FLASH_PTR_ADDR_VAL == (uint32_t) &_sflash_a ? &_sflash_b : &_sflash_a; 
-
-	printf("write_addr: %lX\r\n", write_addr);
-	if (get_ota_state() == 0) set_ota_state();
 	switch (rx_buf[0]) {
 		case OTA_PACKET_BYTE:
-			write_flash(rx_buf, write_addr);
+			write_flash(rx_buf, &_sflash_swap);
 			break;
 		case PKT_COMPLETE:
-			set_flash_ptr(write_addr);
 			clear_ota_state();
 			printf("Firmware download complete, please restart MCU.\r\n");
 			break;
@@ -30,7 +28,7 @@ void kill_ota_firmware(void) {
 	ota_tx_rdy = 0;
 	
 	printf("Killing firmware\r\n");
-	clear_flash_sectors(FLASHB_SECTOR);
+	clear_flash_sectors(FLASH_SWAP);
 }
 
 

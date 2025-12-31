@@ -1,8 +1,8 @@
 __attribute__((naked, noreturn)) void _reset(void) {
-	extern long _sbss, _ebss, _sidata, _sdata, _edata, _sflash_a;
+	extern long _sbss, _ebss, _sidata, _sdata, _edata, _sflash;
 
 	/* Set VTO to app's vec table */
-	(*(volatile long*) 0xE000ED08) = (long) &_sflash_a;
+	(*(volatile long*) 0xE000ED08) = (long) &_sflash;
 	for (long* dst = &_sbss; dst < &_ebss; dst++) *dst = 0;
 	for (long* dst = &_sdata, *src = &_sidata; dst < &_edata;) *dst++ = *src++;
 

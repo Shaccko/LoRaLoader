@@ -1,40 +1,41 @@
 ENTRY(_reset);
 MEMORY {
-	flash_md(rx) :  ORIGIN = 0x08004000, LENGTH = 16k /* Flash metadata */
-	flash_a(rx) : 	ORIGIN = 0x08008000, LENGTH = 248k - 16k /* Occupying sectors 2-5 */
-	flash_b(rx) :   ORIGIN = 0x08040000, LENGTH = 248k /* Sector 6-7 */
+	flash(rx) :     ORIGIN = 0x08004000, LENGTH = 248k 
 	sram(rxw) : 	ORIGIN = 0x20000000, LENGTH = 128k
+
+	flash_swap(rx) :ORIGIN = 0x08040000, LENGTH = 128k 
+	flash_backup(rx) :  ORIGIN = 0x08060000, LENGTH = 128k
 }
 
-_sflash_a = ORIGIN(flash_a);
-_sflash_b = ORIGIN(flash_b);
+_sflash = ORIGIN(flash);
+_eflash = ORIGIN(flash) + LENGTH(flash);
+_sflash_swap = ORIGIN(flash_swap);
+_eflash_swap = ORIGIN(flash_swap) + LENGTH(flash_swap);
+_sflash_backup = ORIGIN(_sflash_backup);
+_eflash_backup = ORIGIN(_sflash_backup) + LENGTH(_sflash_backup);
+
 _estack = ORIGIN(sram) + LENGTH(sram);
 
 SECTIONS {
-	.vectors : { KEEP(*(.vectors*)) } > flash_a
+	.vectors : { KEEP(*(.vectors*)) } > flash
 	.rodata : {
 		*(.rodata)
 		*(.rodata*)
-	} > flash_a
+	} > flash
 	.text : {
 		_stext = .;
 		*(.text)
 		*(.text*)
 		_etext = .;
-	} > flash_a
+	} > flash
 
 	.data : {
 		_sdata = .;
 		*(.data)
 		*(.data*)
 		_edata = .;
-	} > sram AT > flash_a
+	} > sram AT > flash
 	_sidata = LOADADDR(.data);
-
-	.flash_metadata : {
-		_flash_ptr = .;
-		KEEP(*(.flash_metadata))
-	} > flash_md
 
 	.bss : {
 		_sbss = .;

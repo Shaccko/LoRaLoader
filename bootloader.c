@@ -75,8 +75,6 @@ static void jump_to_flash(uint32_t* app_flash) {
  * app, make sure we change our vec table to our application.
  */
 void boot(void) {
-	extern uint32_t _sflash_a, _sflash_b;
-
 	uart2_init();
 	systick_init();
 
@@ -86,16 +84,19 @@ void boot(void) {
 	/* Does code exist? We check this by AND'ing MSP that could 
 	 * *potentially* sit at 0x20020000 of our flash region 
 	 */
+	if ((FLASH_ADDR_VAL(&_sflash_swap) & 0x2FFE0000) == 0x20020000) {
+		swap_ota_flash();
+	}
+	if ((FLASH_ADDR_VAL(&_sflash) & 0x2FFE0000) == 0x20020000) {
+		jump_to_flash(&_sflash);
+	}
+	/* i change mind :( 
 	printf("flash_ptr: %lX\r\n", *((uint32_t*)&_flash_ptr));
 	if ((*((uint32_t*)&_flash_ptr) != 0xFFFFFFFF)) {
-		/* Jump to whatever flash flash_ptr is pointing at */
-		/* Dereferenced address of symbol to get flash region,
-		 * casted back to ptr type */
 		printf("Jumping to flash_ptr: %lX\r\n", *((uint32_t*)&_flash_ptr));
 		jump_to_flash((uint32_t*)(*((uint32_t*)&_flash_ptr)));
 	}
 	else {
-		/* Manually check which flash region is available */
 		if ((*((uint32_t*)(uint32_t)&_sflash_a) & 0x2FFE0000) == 0x20020000) {
 			printf("Flash a set as ptr %lX\r\n", (uint32_t)&_sflash_a);
 			set_flash_ptr(&_sflash_a);
@@ -108,6 +109,7 @@ void boot(void) {
 			jump_to_flash(&_sflash_b);
 		}
 	}
+	*/
 
 
 	/* Run forever */

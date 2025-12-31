@@ -16,6 +16,19 @@ static inline void lock_flash(void) {
 	FLASH->CR |= BIT(31);
 }
 
+static inline void open_flash_pg(void) {
+	unlock_flash();
+	while (FLASH->SR & BIT(16));
+	FLASH->CR |= (2U << 8U); /* x32 word writes */
+	FLASH->CR |= BIT(0);
+}
+
+static inline void close_flash_pg(void) {
+	while (FLASH->SR & BIT(16));
+	FLASH->CR &= ~(BIT(0));
+	lock_flash();
+}
+
 /* Sector Erase */
 /* Check BSY in SR for no flash mem op
  * Set SER bit, select sector to clean
@@ -42,29 +55,47 @@ void clear_flash_sectors(uint8_t sectors) {
  */
 void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 	/* Unlock, enable PG, set paralellism */
-	unlock_flash();
-	while (FLASH->SR & BIT(16));
-	FLASH->CR |= (2U << 8U); /* x32 word writes */
-	FLASH->CR |= BIT(0); /* PG bit */
-	uint32_t* sota_flash = flash_addr;
-	printf("sota_flash: %lX\r\n", sota_flash);
+	open_flash_pg();
 	/* Write words to Flash B region */
 	/* Chunk size needs to be a multiple of 4 */
+	uint32_t* sflash = (uint32_t)flash_addr;
 	for (uint32_t word = 0U; word <= CHUNK_SIZE; word = word + 4U) {
 		/* Little endian */
 		uint32_t chunk_word = ((uint32_t) bin_data[word + 0U] << 0) |
 			((uint32_t) bin_data[word + 1U] << 8) |
 			((uint32_t) bin_data[word + 2U] << 16) |
 			((uint32_t) bin_data[word + 3U] << 24);
-		*(sota_flash + chunk_counter) = chunk_word;
+		*(sflash + chunk_counter) = chunk_word;
 		chunk_counter++; 
 	}
 	/* Lock, disable PG, exit */
-	while (FLASH->SR & BIT(16));
-	FLASH->CR &= ~(BIT(0));
-	lock_flash();
+	close_flash_pg();
 }
 
+void swap_ota_flash(void) {
+	clear_flash_sectors(FLASH_BACKUP);
+	// create_main_backup();
+	open_flash_pg();
+	/* Create backup for mainflash, to be moved to swap region
+	 * after end of swap */
+	/* Deal with the fact that OTA firmware could be greater than
+	 * backup sector size, so warn user and NOT make backup */
+	for (uint32_t* src = &_sflash, *dst = &_sflash_backup;
+			src < &_eflash;) {
+		*dst++ = *src++;
+	}
+
+	/* Move swap region to main flash region */
+	for (uint32_t* src = &_sflash_swap, *dst = &_sflash;
+			src < &_eflash_swap;) {
+		*dst++ = *src++;
+	}
+	close_flash_pg();
+}
+
+
+
+/* Unused flash_ptr set function 
 void set_flash_ptr(uint32_t* flash_addr) {
 	clear_flash_sectors(FLASH_MD_SECTOR);
 	chunk_counter = 0;
@@ -81,7 +112,7 @@ void set_flash_ptr(uint32_t* flash_addr) {
 	FLASH->CR &= ~(BIT(0));
 	lock_flash();
 }
-
+*/
 
 /*
 void set_flash_fallback(uint32_t* fallback_addr) {
