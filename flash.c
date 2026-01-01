@@ -58,9 +58,10 @@ void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 	open_flash_pg();
 	/* Write words to Flash B region */
 	/* Chunk size needs to be a multiple of 4 */
-	uint32_t* sflash = (uint32_t)flash_addr;
+	uint32_t* sflash = flash_addr;
+	printf("flash write addr: %lX\r\n", sflash);
+	/*
 	for (uint32_t word = 0U; word <= CHUNK_SIZE; word = word + 4U) {
-		/* Little endian */
 		uint32_t chunk_word = ((uint32_t) bin_data[word + 0U] << 0) |
 			((uint32_t) bin_data[word + 1U] << 8) |
 			((uint32_t) bin_data[word + 2U] << 16) |
@@ -68,6 +69,7 @@ void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 		*(sflash + chunk_counter) = chunk_word;
 		chunk_counter++; 
 	}
+	*/
 	/* Lock, disable PG, exit */
 	close_flash_pg();
 }
@@ -91,6 +93,8 @@ void swap_ota_flash(void) {
 		*dst++ = *src++;
 	}
 	close_flash_pg();
+	/* Clean the flash sector for another incoming region */
+	clear_flash_sectors(FLASH_SWAP);
 }
 
 

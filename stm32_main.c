@@ -39,7 +39,6 @@ int main() {
 		}
 
 		rx_ready = 0;
-		delay(1);
 	}
 }
 

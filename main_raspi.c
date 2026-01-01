@@ -45,6 +45,19 @@ int main(int argc, char *argv[]) {
 	 * Where it wants to place itself in flash
 	 * all inside sram
 	 */
+
+	/* Send start code, and wait for an 
+	 * ack back
+	 */
+	uint8_t tmp = PKT_START;
+	fsk_transmit(&tmp, 1);
+	sx1278_set_mode(RXSINGLE);
+	fsk_receive(&rx_buf);
+	if (rx_buf != ACK_CODE) {
+		printf("Failed receiving ack...\r\n");
+		return 0;
+	}
+	printf("rx_buf: %X\r\n", rx_buf);
 	
 	uint8_t buf[CHUNK_SIZE + 1];
 	size_t bytes_read;
@@ -52,7 +65,6 @@ int main(int argc, char *argv[]) {
 		struct image_packet pkt;
 		generate_firmware_packet(&pkt, buf, bytes_read);
 		fsk_transmit((uint8_t*)&pkt, bytes_read + 1);
-		usleep(10);
 	}
 
 	uint8_t stop_code = PKT_COMPLETE;

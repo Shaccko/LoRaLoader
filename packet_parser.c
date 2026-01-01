@@ -2,15 +2,22 @@
 
 #include <flash.h>
 #include <packet_parser.h>
+#include <sx1278_fsk.h>
 #include <uart.h>
 
 void write_packet(uint8_t* rx_buf) {
 	if (get_ota_state() == 0) {
-		kill_ota_firmware();
-		set_ota_state();
 	}
 
+	printf("rx_buf[0]: %lX\r\n", rx_buf[0]);
 	switch (rx_buf[0]) {
+		case PKT_START:
+			kill_ota_firmware();
+			uint8_t tmp = ACK_CODE;
+			fsk_transmit(&tmp, 1);
+			sx1278_set_mode(RXCONT);
+			set_ota_state();
+			break;
 		case OTA_PACKET_BYTE:
 			write_flash(rx_buf, &_sflash_swap);
 			break;
