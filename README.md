@@ -1,4 +1,10 @@
-# LoRaLoader
+# LoRaLoader/FSKLoader
+
+Changes: 01/02/26
+	- Changed chip mode to FSK, 250Kb+ downloads are over 16x faster
+	- Flash uses dual swap, swap region is set at sector 6, swaps through software on OTA download
+	- Stores backup of main flash during swap to be stored under swap region AFTER swap procedure finished, just in-case for fallbacks.
+
 Downloading firmware over-the-air via LoRa.
 
 This project is once again built on top of the Bare Metal Programming Guide for STM32 ARM MCUs
@@ -141,11 +147,14 @@ at a bare-metal level, and very memory space efficient, total binary
 .elf size of bootloader+flashA+flashB ended up being less than 10kb.
 
 Some future improvements:
-Definitely implement N bytes received validity checks, instead of checking
-at every packet transmitted. This will significantly improve transmission/receive
-rate. 
-
-We could also use a capacitor placed at every LoRa's 3.3v connection, this will 
-help with noise being picked up and sending garbage data, although software ignores
-it and doesn't make it an issue anyways. 
-
+After implementing FSK and spending another 10+ days on this project,
+I would rather slam my head against concrete than to work on it any longer,
+but future changes would be something like:
+	- Finish implementing a proper watchdog for rollback feature (rollback flash is implemented)
+	- Iron out sync bugs with transmission and reception on both ends
+	- Implement CRC checking on host side by patching it on files to be sent
+	- We could also use a capacitor placed at every LoRa's 3.3v connection, this will 
+	help with noise being picked up and sending garbage data, although software ignores
+	it and doesn't make it an issue anyways. 
+	
+Finito
