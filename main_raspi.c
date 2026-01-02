@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 	 */
 	uint8_t tmp = PKT_START;
 	fsk_transmit(&tmp, 1);
-	sx1278_set_mode(RXSINGLE);
+	sx1278_set_mode(RX);
 	fsk_receive(&rx_buf);
 	if (rx_buf != ACK_CODE) {
 		printf("Failed receiving ack...\r\n");

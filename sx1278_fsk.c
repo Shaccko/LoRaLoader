@@ -132,7 +132,7 @@ uint8_t fsk_receive(uint8_t* rx_buf) {
 		sx1278_read_reg(RegFifo, &rx_buf[i]);
 	}
 
-	sx1278_set_mode(RXCONT);
+	sx1278_set_mode(RX);
 	return OK;
 }
 
@@ -282,5 +282,16 @@ void sx1278_set_mode(uint8_t mode) {
 	curr_op = (uint8_t) ((curr_op & ~7U) | mode); /* Overwrite mode bits */
 
 	sx1278_write_reg(RegOpMode, curr_op);
+	if (mode == RX) {
+		/* Set DIO to rise on payload ready if RX mode */
+		/* Since for some reason PACKET_SENT and PAYLOAD_READY
+		 * are set on the same DIO pin, and we don't want to
+		 * jump into interrupt routine when transmitting a packet
+		 */
+		sx1278_write_reg(RegDioMapping1, 0U << 6U);
+	}
+	else {
+		sx1278_write_reg(RegDioMapping1, 2U << 6U);
+	}
 	curr_mode = mode;
 }

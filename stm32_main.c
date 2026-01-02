@@ -21,7 +21,7 @@ int main() {
 
 	if (init_fsk() == OK) printf("SX1278 Detected\r\n");
 
-	sx1278_set_mode(RXCONT);
+	sx1278_set_mode(RX);
 	uint32_t timer = 0;
 	for(;;) {
 		delay(1);

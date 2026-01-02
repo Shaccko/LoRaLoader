@@ -92,7 +92,7 @@
 #define OK 1
 #define FAIL 0
 
-enum { SLEEP, STDBY, FSTX, TX, FSRX, RXCONT, RXSINGLE, CAD };
+enum { SLEEP, STDBY, FSTX, TX, FSRX, RX };
 
 enum {
 	LOW_BAT = 0x01,
