@@ -33,14 +33,6 @@ uint8_t init_fsk(void) {
 	sx1278_set_fsk_configs();
 	fsk_kbps_fast();
 
-	/* Set DIO here */
-	/*
-	uint8_t reg;
-	sx1278_read_reg(RegDioMapping1, &reg);
-	reg |= 0x3FU;
-	sx1278_write_reg(RegDioMapping1, (uint8_t)(1U << 2U));
-	*/
-
 	sx1278_set_mode(STDBY);	
 
 	uint8_t chip_version;

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define CHUNK_SIZE 63 
+#define CHUNK_SIZE 60
 
 #define CHECKSUM_CODE 0x3
 #define ACK_CODE 0xAC

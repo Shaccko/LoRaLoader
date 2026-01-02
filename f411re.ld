@@ -11,8 +11,8 @@ _sflash = ORIGIN(flash);
 _eflash = ORIGIN(flash) + LENGTH(flash);
 _sflash_swap = ORIGIN(flash_swap);
 _eflash_swap = ORIGIN(flash_swap) + LENGTH(flash_swap);
-_sflash_backup = ORIGIN(_sflash_backup);
-_eflash_backup = ORIGIN(_sflash_backup) + LENGTH(_sflash_backup);
+_sflash_backup = ORIGIN(flash_backup);
+_eflash_backup = ORIGIN(flash_backup) + LENGTH(flash_backup);
 
 _estack = ORIGIN(sram) + LENGTH(sram);
 

@@ -17,7 +17,7 @@
 
 extern uint32_t _sflash, _eflash;
 extern uint32_t _sflash_swap, _eflash_swap;
-extern uint32_t _sflash_backup;
+extern uint32_t _sflash_backup, _eflash_backup;
 
 struct flash {
 	volatile uint32_t ACR, KEYR, OPTKEYR, SR, CR, OPTCR;

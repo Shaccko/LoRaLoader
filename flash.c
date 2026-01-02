@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <packet_parser.h>
 #include <hal.h>
@@ -56,11 +57,8 @@ void clear_flash_sectors(uint8_t sectors) {
 void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 	/* Unlock, enable PG, set paralellism */
 	open_flash_pg();
-	/* Write words to Flash B region */
 	/* Chunk size needs to be a multiple of 4 */
 	uint32_t* sflash = flash_addr;
-	printf("flash write addr: %lX\r\n", sflash);
-	/*
 	for (uint32_t word = 0U; word <= CHUNK_SIZE; word = word + 4U) {
 		uint32_t chunk_word = ((uint32_t) bin_data[word + 0U] << 0) |
 			((uint32_t) bin_data[word + 1U] << 8) |
@@ -69,7 +67,6 @@ void write_flash(uint8_t* bin_data, uint32_t* flash_addr) {
 		*(sflash + chunk_counter) = chunk_word;
 		chunk_counter++; 
 	}
-	*/
 	/* Lock, disable PG, exit */
 	close_flash_pg();
 }
@@ -78,20 +75,22 @@ void swap_ota_flash(void) {
 	clear_flash_sectors(FLASH_BACKUP);
 	// create_main_backup();
 	open_flash_pg();
-	/* Create backup for mainflash, to be moved to swap region
-	 * after end of swap */
 	/* Deal with the fact that OTA firmware could be greater than
 	 * backup sector size, so warn user and NOT make backup */
-	for (uint32_t* src = &_sflash, *dst = &_sflash_backup;
-			src < &_eflash;) {
-		*dst++ = *src++;
-	}
+
+	/* Create backup for mainflash, to be moved to swap region
+	 * after end of swap */
+	size_t flash_region_size = (size_t) (&_eflash_backup - &_sflash_backup);
+	memcpy(&_sflash_backup, &_sflash, flash_region_size);
 
 	/* Move swap region to main flash region */
-	for (uint32_t* src = &_sflash_swap, *dst = &_sflash;
-			src < &_eflash_swap;) {
-		*dst++ = *src++;
-	}
+	flash_region_size = (size_t) (&_eflash_swap - &_sflash_swap);
+	memcpy(&_sflash, &_sflash_swap, flash_region_size);
+
+	/* Move backup flash into swap flash */
+	flash_region_size = (size_t) (&_eflash_backup - &_sflash_backup);
+	memcpy(&_sflash_swap, &_sflash_backup, flash_region_size);
+
 	close_flash_pg();
 	/* Clean the flash sector for another incoming region */
 	clear_flash_sectors(FLASH_SWAP);

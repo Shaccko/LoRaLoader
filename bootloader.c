@@ -85,11 +85,9 @@ void boot(void) {
 	 * *potentially* sit at 0x20020000 of our flash region 
 	 */
 	if ((FLASH_ADDR_VAL(&_sflash_swap) & 0x2FFE0000) == 0x20020000) {
-		printf("Swapping flash\r\n");
 		swap_ota_flash();
 	}
 	if ((FLASH_ADDR_VAL(&_sflash) & 0x2FFE0000) == 0x20020000) {
-		printf("Jumping to main flash\r\n");
 		jump_to_flash(&_sflash);
 	}
 	/* i change mind :( 
