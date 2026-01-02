@@ -151,7 +151,8 @@ Some future improvements:
 After implementing FSK and spending another 10+ days on this project,
 I would rather slam my head against concrete than to work on it any longer,
 but future changes would be something like:
-	- Finish implementing a proper watchdog for rollback feature (rollback flash is implemented)
+
+	-  Finish implementing a proper watchdog for rollback feature (rollback flash is implemented)
 	- Iron out sync bugs with transmission and reception on both ends
 	- Implement CRC checking on host side by patching it on files to be sent
 	- We could also use a capacitor placed at every LoRa's 3.3v connection, this will 
