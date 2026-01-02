@@ -1,6 +1,7 @@
 # LoRaLoader/FSKLoader
 
 Changes: 01/02/26
+
 	- Changed chip mode to FSK, 250Kb+ downloads are over 16x faster
 	- Flash uses dual swap, swap region is set at sector 6, swaps through software on OTA download
 	- Stores backup of main flash during swap to be stored under swap region AFTER swap procedure finished, just in-case for fallbacks.
