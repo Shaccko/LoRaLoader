@@ -26,6 +26,7 @@
 
 #define SPI_TXE_FLAG (BIT(1))
 #define SPI_RXE_FLAG (BIT(0))
+#define SPI_BSY_FLAG (BIT(7))
 
 #define SPI1_PORT 'A'
 #define SCK1_PIN (PIN_NUM(5))
