@@ -28,7 +28,6 @@ void spi_init(struct spi* spi, uint32_t spi_pins, uint8_t spi_port) {
 	spi->CR1 = SPI_MASTER | SPI_8BITMODE | \
 		SPI_CLKMODE0 | SPI_MSBFIRST | SPI_NSS_SOFT | \
 		SPI_BAUDRATE2 | SPI_BIDIMODE0;
-	spi->CR2 = SPI_TXEIE | SPI_RXNEIE; 
 	spi->CR1 |= SPI_ENABLE;
 }
 
@@ -37,25 +36,26 @@ uint32_t spi_receive_byte(struct spi* spi) {
 	return spi->DR;
 }
 
-
-
 void spi_write_buf(struct spi* spi, uint8_t* buf) {
 	while(!(spi->SR & SPI_TXE_FLAG)); 
 	spi->DR = (uint32_t)*buf;
+	while(!(spi->SR & SPI_BSY_FLAG));
 }
 
-void spi_transmit_data(struct spi* spi, uint8_t* buf, size_t len) {
+void spi_transmit_data(struct spi* spi, uint8_t buf, size_t len) {
 	while (len--){
 		spi_write_buf(spi, buf++);
 	}
 }
 
 void spi_transmit_receive(struct spi* spi, uint8_t* tx_buf, uint8_t* rx_buf, size_t tx_len) {
+	if (tx_len > 32) return;
+	
 	size_t i = 0;
 	uint8_t dummy[32];
 	if (rx_buf == NULL || rx_buf == 0) rx_buf = dummy;
 	while(tx_len--) {
-		spi_write_buf(spi, tx_buf++);
+		spi_write_buf(spi, *tx_buf++);
 		rx_buf[i++] = (uint8_t) spi_receive_byte(spi);
 	}
 }
